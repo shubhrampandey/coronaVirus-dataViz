@@ -1,0 +1,12 @@
+name: coronaVirusViz
+title: coronaVirusViz
+username:
+account: shubhrampandey
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1915300
+bundleId: 2860940
+url: https://shubhrampandey.shinyapps.io/coronaVirusViz/
+when: 1583643093.806
+asMultiple: FALSE
+asStatic: FALSE
