@@ -31,23 +31,35 @@ output$cardUI = renderUI({
     dplyr::mutate(country = dplyr::if_else(country == "Gibraltar", "United Kingdom", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Palestine", "Israel", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "North Macedonia", "Macedonia", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Others", "United Kingdom", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Iran (Islamic Republic of)", "Iran", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Republic of Korea", "South Korea", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Taipei and environs", "Taiwan", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Viet Nam", "Vietnam", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "occupied Palestinian territory", "Israel", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Russian Federation", "Russia", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "French Guiana", "France", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Hong Kong SAR", "China", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Macao SAR", "China", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Serbia", "Republic of Serbia", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Republic of Moldova", "Moldova", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Martinique", "France", country)) %>%
     dplyr::mutate(country = trimws(country)) %>%
     select(-Country.Region)
   
-  x = dataframeTotal %>%
-    filter(str_detect(tolower(country), pattern = "macau") |
-             str_detect(tolower(country), pattern = "hong") |
-             str_detect(tolower(country), pattern = "china") 
-    )
-  y = rbind(x, c(colSums(x[,1:4],na.rm = T),"China")) %>%
-    .[4,]
-  dataframeTotal[match(y$country,dataframeTotal$country),] = y
+  # x = dataframeTotal %>%
+  #   filter(str_detect(tolower(country), pattern = "macao") |
+  #            str_detect(tolower(country), pattern = "hong") |
+  #            str_detect(tolower(country), pattern = "china") 
+  #   )
+  # y = rbind(x, c(colSums(x[,1:4],na.rm = T),"China")) %>%
+  #   .[nrow(.),]
+  # dataframeTotal[match(y$country,dataframeTotal$country),] = y
+
   dataframeTotal[,1:4] = lapply(dataframeTotal[,1:4], function(x) as.numeric(x))
   dataframeTotal = dataframeTotal %>%
-    filter(!(str_detect(tolower(country), pattern = "macau") |
-               str_detect(tolower(country), pattern = "hong") )
-    ) %>%
+    # filter(!(str_detect(tolower(country), pattern = "macau") |
+    #            str_detect(tolower(country), pattern = "hong") )
+    # ) %>%
     group_by(country) %>%
     summarise(totalConfirmed = sum(confirmed),
               totalDeath = sum(death),
@@ -254,7 +266,7 @@ output$cumulativePlot = renderHighchart({
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = df_daily$date) %>%
-    hc_yAxis(title = list(text = "Cumulative Number of Cases"),max = yLimit) %>%
+    hc_yAxis(title = list(text = "Cumulative Number of Cases")) %>%
     hc_add_series(name = "Active",data = df_daily$active_cum) %>% 
     hc_add_series(name = "Recovered", data = df_daily$recovered_cum) %>% 
     hc_add_series(name = "Death", data = df_daily$death_cum)

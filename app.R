@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v0.1"
 appName = "CORONAVIRUS Data Visualization Platform"
 appLongName = "CORONAVIRUS Data Visualization Platform"
-lastUpdate = "2020-03-08 10:00:00 IST"
+lastUpdate = "2020-03-12 09:00:00 IST"
 
 source("appFiles/packageLoad.R")
 source("appFiles/dataLoad.R")
