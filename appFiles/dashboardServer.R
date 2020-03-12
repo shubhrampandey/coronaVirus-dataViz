@@ -45,7 +45,6 @@ output$cardUI = renderUI({
     dplyr::mutate(country = dplyr::if_else(country == "Martinique", "France", country)) %>%
     dplyr::mutate(country = trimws(country)) %>%
     select(-Country.Region)
-  
   # x = dataframeTotal %>%
   #   filter(str_detect(tolower(country), pattern = "macao") |
   #            str_detect(tolower(country), pattern = "hong") |
@@ -61,10 +60,10 @@ output$cardUI = renderUI({
     #            str_detect(tolower(country), pattern = "hong") )
     # ) %>%
     group_by(country) %>%
-    summarise(totalConfirmed = sum(confirmed),
-              totalDeath = sum(death),
-              totalRecovered = sum(recovered),
-              totalUnrecovered = sum(unrecovered)
+    summarise(totalConfirmed = sum(confirmed,na.rm = T),
+              totalDeath = sum(death,na.rm = T),
+              totalRecovered = sum(recovered,na.rm = T),
+              totalUnrecovered = sum(unrecovered,na.rm = T)
     ) %>%
     as.data.frame()
   dataframeTotal = dataframeTotal %>% as.data.frame()
