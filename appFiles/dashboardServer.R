@@ -1,5 +1,7 @@
 results = reactiveValues(
-  dataframeTotal = NULL
+  dataframeTotal = NULL,
+  dfDaily = NULL,
+  newCases = NULL
 )
 
 
@@ -15,7 +17,7 @@ output$dashboard = renderUI({
   )
 })
 
-output$cardUI = renderUI({
+observe({
   dataframeTotal <- coronavirus %>% 
     dplyr::group_by(Country.Region, type) %>%
     dplyr::summarise(total = sum(cases)) %>%
@@ -53,7 +55,7 @@ output$cardUI = renderUI({
   # y = rbind(x, c(colSums(x[,1:4],na.rm = T),"China")) %>%
   #   .[nrow(.),]
   # dataframeTotal[match(y$country,dataframeTotal$country),] = y
-
+  
   dataframeTotal[,1:4] = lapply(dataframeTotal[,1:4], function(x) as.numeric(x))
   dataframeTotal = dataframeTotal %>%
     # filter(!(str_detect(tolower(country), pattern = "macau") |
@@ -68,6 +70,36 @@ output$cardUI = renderUI({
     as.data.frame()
   dataframeTotal = dataframeTotal %>% as.data.frame()
   results$dataframeTotal = dataframeTotal
+  
+  df_daily <- coronavirus %>% 
+    dplyr::group_by(date, type) %>%
+    dplyr::summarise(total = sum(cases, na.rm = TRUE)) %>%
+    tidyr::pivot_wider(names_from = type,
+                       values_from = total) %>%
+    dplyr::arrange(date) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(active =  confirmed - death - recovered) %>%
+    dplyr::mutate(confirmed_cum = cumsum(confirmed),
+                  death_cum = cumsum(death),
+                  recovered_cum = cumsum(recovered),
+                  active_cum = cumsum(active))
+  results$dfDaily = df_daily
+  
+  max_date <- max(coronavirus$date)
+  newCases = coronavirus %>% 
+              dplyr::filter(type == "confirmed", date == max_date) %>%
+              dplyr::group_by(Country.Region) %>%
+              dplyr::summarise(total_cases = sum(cases)) %>%
+              dplyr::arrange(-total_cases) %>%
+              dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
+              dplyr::ungroup() %>%
+              dplyr::top_n(n = 15, wt = total_cases)
+  
+  results$newCases = newCases
+      
+})
+
+output$cardUI = renderUI({
   data = results$dataframeTotal
   totalConfirmed = sum(data$totalConfirmed,na.rm = T)
   totalDeath = sum(data$totalDeath,na.rm = T)
@@ -245,18 +277,7 @@ output$cumulativePlot = renderHighchart({
   active_color <- "#1f77b4"
   recovered_color <- "forestgreen"
   death_color <- "red"
-  df_daily <- coronavirus %>% 
-    dplyr::group_by(date, type) %>%
-    dplyr::summarise(total = sum(cases, na.rm = TRUE)) %>%
-    tidyr::pivot_wider(names_from = type,
-                       values_from = total) %>%
-    dplyr::arrange(date) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(active =  confirmed - death - recovered) %>%
-    dplyr::mutate(confirmed_cum = cumsum(confirmed),
-                  death_cum = cumsum(death),
-                  recovered_cum = cumsum(recovered),
-                  active_cum = cumsum(active))
+  df_daily = results$dfDaily
   x = max(df_daily$active_cum,df_daily$death_cum,df_daily$recovered_cum)
   y = nchar(x) - 1
   yLimit = x %>% round(-y)
@@ -310,16 +331,7 @@ output$totalCasesPlot = renderHighchart({
 })
 
 output$newCasesPlot = renderHighchart({
-  max_date <- max(coronavirus$date)
-  x = coronavirus %>% 
-    dplyr::filter(type == "confirmed", date == max_date) %>%
-    dplyr::group_by(Country.Region) %>%
-    dplyr::summarise(total_cases = sum(cases)) %>%
-    dplyr::arrange(-total_cases) %>%
-    dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
-    dplyr::ungroup() %>%
-    dplyr::top_n(n = 15, wt = total_cases)
-  
+  x = results$newCases
   death_color <- "red"
   hc <- highchart() %>% 
     hc_subtitle(text = "New  Cases (Top 15)",
