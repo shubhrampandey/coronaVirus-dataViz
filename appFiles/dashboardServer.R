@@ -35,7 +35,9 @@ observe({
     dplyr::mutate(country = dplyr::if_else(country == "North Macedonia", "Macedonia", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Iran (Islamic Republic of)", "Iran", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Republic of Korea", "South Korea", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Korea, South", "South Korea", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Taipei and environs", "Taiwan", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Taiwan*", "Taiwan", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Viet Nam", "Vietnam", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "occupied Palestinian territory", "Israel", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Russian Federation", "Russia", country)) %>%
@@ -45,6 +47,14 @@ observe({
     dplyr::mutate(country = dplyr::if_else(country == "Serbia", "Republic of Serbia", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Republic of Moldova", "Moldova", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Martinique", "France", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Czechia", "Czech Republic", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Reunion", "France", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Guadeloupe", "France", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Aruba", "Netherlands", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Congo (Kinshasa)", "Democratic Republic of the Congo", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Congo (Brazzaville)", "Republic of Congo", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
     dplyr::mutate(country = trimws(country)) %>%
     select(-Country.Region)
   # x = dataframeTotal %>%
@@ -55,7 +65,6 @@ observe({
   # y = rbind(x, c(colSums(x[,1:4],na.rm = T),"China")) %>%
   #   .[nrow(.),]
   # dataframeTotal[match(y$country,dataframeTotal$country),] = y
-  
   dataframeTotal[,1:4] = lapply(dataframeTotal[,1:4], function(x) as.numeric(x))
   dataframeTotal = dataframeTotal %>%
     # filter(!(str_detect(tolower(country), pattern = "macau") |
@@ -184,6 +193,13 @@ output$cardUI = renderUI({
 
 output$chartUI = renderUI({
   tagList(
+    argonRow(
+      center = T,
+      h4(paste0("Total countries affected: ",results$dataframeTotal$country %>% unique() %>% length()), 
+              style = 'vertical-align: middle;
+                       padding: 0px 0px;
+                       font-size:25px;')
+    ),
     argonRow(
       argonColumn(
         width = 5,

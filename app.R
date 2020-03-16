@@ -1,10 +1,10 @@
 ##### Global: options #####
-Production = F  
+Production = T  
 options(scipen = 1000, expressions = 10000)
 appVersion = "v0.1"
-appName = "CORONAVIRUS Data Visualization Platform"
-appLongName = "CORONAVIRUS Data Visualization Platform"
-lastUpdate = "2020-03-12 09:00:00 IST"
+appName = "COVID-19 Data Visualization Platform"
+appLongName = "COVID-19 Data Visualization Platform"
+lastUpdate = "2020-03-16 09:00:00 IST"
 
 source("appFiles/packageLoad.R")
 source("appFiles/dataLoad.R")

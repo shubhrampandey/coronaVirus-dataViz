@@ -21,6 +21,10 @@ CSS =
       .navbar-nav .nav-link {
       color: white!important;
       }
+      hr {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      }
       .nav-wrapper {
       padding:  0;
       padding-bottom: 1px;
