@@ -1,7 +1,8 @@
 results = reactiveValues(
   dataframeTotal = NULL,
   dfDaily = NULL,
-  newCases = NULL
+  newCases = NULL,
+  dataframeTotalOldCases = NULL
 )
 
 
@@ -60,19 +61,8 @@ observe({
     dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
     dplyr::mutate(country = trimws(country)) %>%
     select(-Country.Region)
-  # x = dataframeTotal %>%
-  #   filter(str_detect(tolower(country), pattern = "macao") |
-  #            str_detect(tolower(country), pattern = "hong") |
-  #            str_detect(tolower(country), pattern = "china") 
-  #   )
-  # y = rbind(x, c(colSums(x[,1:4],na.rm = T),"China")) %>%
-  #   .[nrow(.),]
-  # dataframeTotal[match(y$country,dataframeTotal$country),] = y
   dataframeTotal[,1:4] = lapply(dataframeTotal[,1:4], function(x) as.numeric(x))
   dataframeTotal = dataframeTotal %>%
-    # filter(!(str_detect(tolower(country), pattern = "macau") |
-    #            str_detect(tolower(country), pattern = "hong") )
-    # ) %>%
     group_by(country) %>%
     summarise(totalConfirmed = sum(confirmed,na.rm = T),
               totalDeath = sum(death,na.rm = T),
@@ -82,6 +72,10 @@ observe({
     as.data.frame()
   dataframeTotal = dataframeTotal %>% as.data.frame()
   results$dataframeTotal = dataframeTotal
+  
+  
+  
+  
   
   df_daily <- coronavirus %>% 
     dplyr::group_by(date, type) %>%
@@ -108,6 +102,19 @@ observe({
               dplyr::top_n(n = 15, wt = total_cases)
   
   results$newCases = newCases
+  dataframeTotalOldCases = coronavirus %>% 
+                            dplyr::filter(!(date == max_date)) %>% 
+                            dplyr::group_by(type) %>%
+                            dplyr::summarise(total = sum(cases)) %>%
+                            tidyr::pivot_wider(names_from =  type, 
+                                               values_from = total) %>%
+                            dplyr::mutate(unrecovered = confirmed - ifelse(is.na(recovered), 0, recovered) - ifelse(is.na(death), 0, death)) %>%
+    summarise(totalConfirmed = sum(confirmed,na.rm = T),
+              totalDeath = sum(death,na.rm = T),
+              totalRecovered = sum(recovered,na.rm = T),
+              totalUnrecovered = sum(unrecovered,na.rm = T)
+    )
+  results$dataframeTotalOldCases = dataframeTotalOldCases
       
 })
 
@@ -203,9 +210,12 @@ output$cardUI = renderUI({
           background_color = "warning",
           gradient = T,
           width = 12
-        )
-        # h6("yesterday:123456", style = 'text-align:center;
-        #                font-size:15px;')
+        ),
+        h6(paste0("Yesterday: ",
+                  prettyNum(results$dataframeTotalOldCases$totalConfirmed,big.mark = ",")
+                  ), 
+                  style = 'text-align:center;
+                           font-size:15px;')
       ),
       argonColumn(
         width = 3,
@@ -218,7 +228,12 @@ output$cardUI = renderUI({
           background_color = "info",
           gradient = T,
           width = 12
-        )
+        ),
+        h6(paste0("Yesterday: ",
+                  prettyNum(results$dataframeTotalOldCases$totalUnrecovered,big.mark = ",")
+                  ), 
+                  style = 'text-align:center;
+                           font-size:15px;')
       ),
       argonColumn(
         width = 3,
@@ -231,7 +246,12 @@ output$cardUI = renderUI({
           background_color = "success",
           gradient = T,
           width = 12
-        )
+        ),
+        h6(paste0("Yesterday: ",
+                  prettyNum(results$dataframeTotalOldCases$totalRecovered,big.mark = ",")
+                  ), 
+                  style = 'text-align:center;
+                           font-size:15px;')
       ),
       argonColumn(
         width = 3,
@@ -244,7 +264,12 @@ output$cardUI = renderUI({
           background_color = "danger",
           gradient = T,
           width = 12
-        )
+        ),
+        h6(paste0("Yesterday: ",
+                  prettyNum(results$dataframeTotalOldCases$totalDeath,big.mark = ",")
+                  ), 
+                  style = 'text-align:center;
+                           font-size:15px;')
       )
     )
   )
