@@ -111,25 +111,91 @@ observe({
       
 })
 
-output$cardUI = renderUI({
-  data = results$dataframeTotal
-  totalConfirmed = sum(data$totalConfirmed,na.rm = T)
-  totalDeath = sum(data$totalDeath,na.rm = T)
-  totalRecovered = sum(data$totalRecovered,na.rm = T)
-  activeCases = sum(data$totalUnrecovered,na.rm = T)
+output$confirmedCount <- renderCountup({
+  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
+  opts <- list(useEasing = TRUE,
+               useGrouping = TRUE,
+               prefix = "Total confirmed cases: ")
+  countup(
+    totalConfirmed,
+    start_at = 0,
+    options = opts,
+    duration = 2,
+    start = TRUE,
+    width = "100%",
+    height = NULL,
+    elementId = NULL
+  )
+})
+output$activeCount <- renderCountup({
+  totalUnrecovered = sum(results$dataframeTotal$totalUnrecovered,na.rm = T)
+  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
+  activeCasesPer = round(((totalUnrecovered/totalConfirmed)*100),1)
+  opts <- list(useEasing = TRUE,
+               useGrouping = TRUE,
+               prefix = "Active Cases: ",
+               suffix = paste0(" (",activeCasesPer,"%)")
+  )
+  countup(
+    totalUnrecovered,
+    start_at = 0,
+    options = opts,
+    duration = 2,
+    start = TRUE,
+    width = "100%",
+    height = NULL,
+    elementId = NULL
+  )
+})
+output$recoveredCount <- renderCountup({
+  totalRecovered = sum(results$dataframeTotal$totalRecovered,na.rm = T)
+  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
   totalRecoveredPer = round(((totalRecovered/totalConfirmed)*100),1)
+  opts <- list(useEasing = TRUE,
+               useGrouping = TRUE,
+               prefix = "Recovered Cases: ",
+               suffix = paste0(" (",totalRecoveredPer,"%)")
+               )
+  countup(
+    totalRecovered,
+    start_at = 0,
+    options = opts,
+    duration = 2,
+    start = TRUE,
+    width = "100%",
+    height = NULL,
+    elementId = NULL
+  )
+})
+output$deathCount <- renderCountup({
+  totalDeath = sum(results$dataframeTotal$totalDeath,na.rm = T)
+  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
   totalDeathPer = round(((totalDeath/totalConfirmed)*100),1)
-  activeCasesPer = round(((activeCases/totalConfirmed)*100),1)
+  opts <- list(useEasing = TRUE,
+               useGrouping = TRUE,
+               prefix = "Deaths (till today): ",
+               suffix = paste0(" (",totalDeathPer,"%)"))
+  countup(
+    totalDeath,
+    start_at = 0,
+    options = opts,
+    duration = 2,
+    start = TRUE,
+    width = "100%",
+    height = NULL,
+    elementId = NULL
+  )
+})
+
+
+output$cardUI = renderUI({
+  
   tagList(
     argonRow(
       argonColumn(
         width = 3,
         argonInfoCard(
-          value = strong(prettyNum(totalConfirmed,big.mark = ",")) ,
-          title = NULL,
-          stat = NULL,
-          stat_icon = NULL,
-          description = "Total Confirmed Cases",
+          value = countupOutput("confirmedCount"),
           icon = icon("users"),
           icon_background = "default",
           hover_lift = F,
@@ -138,15 +204,13 @@ output$cardUI = renderUI({
           gradient = T,
           width = 12
         )
+        # h6("yesterday:123456", style = 'text-align:center;
+        #                font-size:15px;')
       ),
       argonColumn(
         width = 3,
         argonInfoCard(
-          value = paste0(prettyNum(activeCases,big.mark = ",")," (",activeCasesPer,"%)"),
-          title = NULL,
-          stat = NULL,
-          stat_icon = NULL,
-          description = "Active Cases",
+          value = countupOutput("activeCount"),
           icon = icon("hospital"),
           icon_background = "default",
           hover_lift = F,
@@ -159,11 +223,7 @@ output$cardUI = renderUI({
       argonColumn(
         width = 3,
         argonInfoCard(
-          value = paste0(prettyNum(totalRecovered,big.mark = ",")," (",totalRecoveredPer,"%)"),
-          title = NULL,
-          stat = NULL,
-          stat_icon = NULL,
-          description = "Recovered Cases",
+          value = countupOutput("recoveredCount"),
           icon = icon("smile"),
           icon_background = "default",
           hover_lift = F,
@@ -176,11 +236,7 @@ output$cardUI = renderUI({
       argonColumn(
         width = 3,
         argonInfoCard(
-          value = paste0(prettyNum(totalDeath,big.mark = ",")," (",totalDeathPer,"%)"),
-          title = NULL,
-          stat = NULL,
-          stat_icon = NULL,
-          description = "Deaths",
+          value = countupOutput("deathCount"),
           icon = icon("heartbeat"),
           icon_background = "default",
           hover_lift = F,
