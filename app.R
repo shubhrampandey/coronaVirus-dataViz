@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v0.1"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-03-16 09:00:00 IST"
+lastUpdate = "2020-03-18 09:00:00 IST"
 
 source("appFiles/packageLoad.R")
 source("appFiles/dataLoad.R")
@@ -119,17 +119,6 @@ server <- function(input, output, session) {
     # q("no")
   })
   source("appFiles/dashboardServer.R", local = TRUE)
-  ##### debug server logic #####
-  output$runRCodeOutput = renderPrint({
-    req(rcode())
-    isolate({
-      eval(parse(text = rcode()$text))
-    })
-  })
-  rcode = reactiveVal()
-  observeEvent(input$runRCodeButton, {
-    req(!Production); rcode(list("text" = input$runRCode, "type" = "runRCode", "rand" = runif(1)))
-  }, ignoreNULL = TRUE, ignoreInit = TRUE)
   
 }
 

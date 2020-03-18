@@ -340,8 +340,4 @@ CSS =
     )
 
 ##### footer #####
-footer = 
-  tags$footer(
-    paste0("Analysis running on PAREXEL ",appName," ",appVersion, ". "),
-    HTML("Creator and maintainer: <a href='mailto:Shubhram.Pandey@PAREXEL.com'>Shubhram Pandey</a>.")
-  )
+
