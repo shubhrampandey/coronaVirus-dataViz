@@ -53,6 +53,9 @@ observe({
     dplyr::mutate(country = dplyr::if_else(country == "Aruba", "Netherlands", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Congo (Kinshasa)", "Democratic Republic of the Congo", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Congo (Brazzaville)", "Republic of Congo", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Republic of the Congo", "Republic of Congo", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Tanzania", "United Republic of Tanzania", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "The Gambia", "Gambia", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
     dplyr::mutate(country = trimws(country)) %>%
