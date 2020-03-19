@@ -1,10 +1,10 @@
 ##### Global: options #####
 Production = T  
 options(scipen = 1000, expressions = 10000)
-appVersion = "v0.1"
+appVersion = "v1.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-03-18 09:00:00 IST"
+lastUpdate = "2020-03-19 09:00:00 IST"
 
 source("appFiles/packageLoad.R")
 source("appFiles/dataLoad.R")
@@ -24,7 +24,7 @@ ui <- tagList(
       top_padding = 2,
       bottom_padding = 0,
       background_img = "coronavirus.jpg",
-      height = 100,
+      height = 90,
       argonRow(
         argonColumn(width = 9,
                     h4(appLongName, style = 'color:white;
@@ -44,7 +44,7 @@ ui <- tagList(
             argonColumn(
               width = 12,
               center = T,
-              h5(HTML("Creator and maintainer: <a href='mailto:shubhram1992@gmail.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:15px;')
+              h5(HTML("Creator and maintainer: <a href='mailto:shubhram1992@gmail.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:13px;')
             ),
             argonColumn(
               width = 12,

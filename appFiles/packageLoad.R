@@ -13,5 +13,6 @@ if (!require(DT)) {install.packages("DT"); library(DT)}
 if (!require(shinycssloaders)) {install.packages("shinycssloaders"); library(shinycssloaders)}
 if (!require(shinyWidgets)) {install.packages("shinyWidgets"); library(shinyWidgets)}
 if (!require(countup)) {devtools::install_github("JohnCoene/countup"); library(countup)}
+# devtools::install_github("RamiKrispin/coronavirus")
 
 
