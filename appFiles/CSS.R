@@ -47,7 +47,7 @@ CSS =
       font-weight: bold;
       }
       .h2, h2 {
-      font-size: 1.4rem;
+      font-size: 1.1rem;
       }
       h2 {
       color: ", blueColourText, ";
@@ -77,6 +77,12 @@ CSS =
       }
       input[type= 'number'] {
       font-size:15px;
+      }
+      .row {
+          display: flex;
+          margin-right: 0px;
+          margin-left: -15px;
+          flex-wrap: wrap;
       }
       
       th {

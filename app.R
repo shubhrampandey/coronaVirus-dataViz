@@ -1,21 +1,30 @@
 ##### Global: options #####
 Production = T  
 options(scipen = 1000, expressions = 10000)
-appVersion = "v0.1"
+appVersion = "v1.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-03-18 09:00:00 IST"
+lastUpdate = "2020-03-19 09:00:00 IST"
+
+loader <- tagList(
+  waiter::spin_loaders(42),
+  br(),
+  h3("Loading data")
+)
 
 source("appFiles/packageLoad.R")
 source("appFiles/dataLoad.R")
 source("appFiles/CSS.R", local = TRUE)
 source("appFiles/dashboardPage.R", local = TRUE)
 ##### User interface #####
-ui <- tagList(
-  
+ui <- tagList( # dependencies
+  use_waiter(),
+  useSweetAlert(),
+  waiter::waiter_show_on_load(loader, color = "#000"),
+# shows before anything else
   ##### CSS and style functions #####
   CSS, #CSS.R
-  
+  # Loading message
   argonDash::argonDashPage(
     title = appLongName,
     header = argonDash::argonDashHeader(
@@ -24,7 +33,7 @@ ui <- tagList(
       top_padding = 2,
       bottom_padding = 0,
       background_img = "coronavirus.jpg",
-      height = 100,
+      height = 90,
       argonRow(
         argonColumn(width = 9,
                     h4(appLongName, style = 'color:white;
@@ -44,7 +53,7 @@ ui <- tagList(
             argonColumn(
               width = 12,
               center = T,
-              h5(HTML("Creator and maintainer: <a href='mailto:shubhram1992@gmail.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:15px;')
+              h5(HTML("Creator and maintainer: <a href='mailto:shubhram1992@gmail.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:13px;')
             ),
             argonColumn(
               width = 12,
@@ -94,18 +103,15 @@ ui <- tagList(
       ),
     sidebar = NULL,
     body = argonDashBody(
-      tags$script( "$(document).on('click', function(event) {
-                   Shiny.onInputChange('activeTab', $('.active').data().value);});"),
       tags$head( tags$meta(name = "viewport", content = "width=1600"),uiOutput("body")),
       tags$br(),
-      dashboardUI
+           dashboardUI
     )
   )
   )
 
 ##### server #####
 server <- function(input, output, session) {
-  
   printLogJs = function(x, ...) {
     logjs(x)
     T
@@ -119,7 +125,8 @@ server <- function(input, output, session) {
     # q("no")
   })
   source("appFiles/dashboardServer.R", local = TRUE)
-  
+  # Hide the loading message when the rest of the server function has executed
+  waiter_hide() # will hide *on_load waiter
 }
 
 # Run the application
