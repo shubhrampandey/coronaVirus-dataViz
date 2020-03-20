@@ -6,16 +6,25 @@ appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
 lastUpdate = "2020-03-19 09:00:00 IST"
 
+loader <- tagList(
+  waiter::spin_loaders(42),
+  br(),
+  h3("Loading data")
+)
+
 source("appFiles/packageLoad.R")
 source("appFiles/dataLoad.R")
 source("appFiles/CSS.R", local = TRUE)
 source("appFiles/dashboardPage.R", local = TRUE)
 ##### User interface #####
-ui <- tagList(
-  
+ui <- tagList( # dependencies
+  use_waiter(),
+  useSweetAlert(),
+  waiter::waiter_show_on_load(loader, color = "#000"),
+# shows before anything else
   ##### CSS and style functions #####
   CSS, #CSS.R
-  
+  # Loading message
   argonDash::argonDashPage(
     title = appLongName,
     header = argonDash::argonDashHeader(
@@ -94,18 +103,15 @@ ui <- tagList(
       ),
     sidebar = NULL,
     body = argonDashBody(
-      tags$script( "$(document).on('click', function(event) {
-                   Shiny.onInputChange('activeTab', $('.active').data().value);});"),
       tags$head( tags$meta(name = "viewport", content = "width=1600"),uiOutput("body")),
       tags$br(),
-      dashboardUI
+           dashboardUI
     )
   )
   )
 
 ##### server #####
 server <- function(input, output, session) {
-  
   printLogJs = function(x, ...) {
     logjs(x)
     T
@@ -119,7 +125,8 @@ server <- function(input, output, session) {
     # q("no")
   })
   source("appFiles/dashboardServer.R", local = TRUE)
-  
+  # Hide the loading message when the rest of the server function has executed
+  waiter_hide() # will hide *on_load waiter
 }
 
 # Run the application

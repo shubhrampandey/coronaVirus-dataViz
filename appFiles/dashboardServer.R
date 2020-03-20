@@ -59,16 +59,14 @@ output$dashboard = renderUI({
   argonTab(
     tabName = "Sentiments",
     active = F,
-    argonRow(
-      center = T,
-      tags$img(src = "wip.jpg")
-    )
+    uiOutput("sentimentUI") %>% withSpinner()
   )
   
   )
 })
 
 observe({
+  waiter_show(loader)
   dataframeFinal = coronavirus %>%
                         dplyr::mutate(country = dplyr::if_else(Country.Region == "US", "United States of America", Country.Region)) %>%
                         dplyr::mutate(country = dplyr::if_else(country == "UK", "United Kingdom", country)) %>%
@@ -100,8 +98,10 @@ observe({
                         dplyr::mutate(country = dplyr::if_else(country == "Republic of the Congo", "Republic of Congo", country)) %>%
                         dplyr::mutate(country = dplyr::if_else(country == "Tanzania", "United Republic of Tanzania", country)) %>%
                         dplyr::mutate(country = dplyr::if_else(country == "The Gambia", "Gambia", country)) %>%
+                        dplyr::mutate(country = dplyr::if_else(country == "Gambia, The", "Gambia", country)) %>%
                         dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
                         dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
+                        dplyr::mutate(country = dplyr::if_else(country == "Bahamas, The", "The Bahamas", country)) %>%
                         dplyr::mutate(country = trimws(country))
   results$dataframeFinal = dataframeFinal
   dataframeTotal <- dataframeFinal %>% 
@@ -142,8 +142,10 @@ observe({
     dplyr::mutate(country = dplyr::if_else(country == "Republic of the Congo", "Republic of Congo", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Tanzania", "United Republic of Tanzania", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "The Gambia", "Gambia", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Gambia, The", "Gambia", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Bahamas, The", "The Bahamas", country)) %>%
     dplyr::mutate(country = trimws(country)) %>%
     select(-Country.Region)
   dataframeTotal[,1:4] = lapply(dataframeTotal[,1:4], function(x) as.numeric(x))
@@ -155,7 +157,6 @@ observe({
               totalUnrecovered = sum(unrecovered,na.rm = T)
     ) %>%
     as.data.frame()
-  dataframeTotal = dataframeTotal %>% as.data.frame()
   results$dataframeTotal = dataframeTotal
   df_daily <- coronavirus %>% 
     dplyr::group_by(date, type) %>%
@@ -216,6 +217,7 @@ observe({
               totalUnrecovered = sum(unrecovered,na.rm = T)
     )
   results$dataframeTotalOldCases = dataframeTotalOldCases
+  waiter_hide()
 })
 
 output$confirmedCount <- renderCountup({
@@ -1039,3 +1041,188 @@ output$newCasesRecoveredCountryPlot = renderHighchart({
     hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
                shared = TRUE, borderWidth = 5,table = T)
 })
+
+#### Sentiment analysis ----
+
+sentimentAnalResult = reactiveValues(
+  run = 1,
+  tweetText = NULL,
+  tweetScores = NULL
+)
+
+output$sentimentUI = renderUI({
+  tagList(
+    argonRow(
+      argonColumn(
+        width = 12,
+        center = T,
+        h1("Sentiment analysis using Twitter Data")
+      )
+    ),
+    argonRow(
+      argonColumn(
+        width = 4,
+        argonRow(
+          argonColumn(
+            width = 12,
+            pickerInput(
+              "twitterHashtag",
+              label = strong("Please select the hashtags you want to include in sentiment analysis: "),
+              choices = c("#coronavirus","#covid19","#Covid_19","#CoronaCrisis"),
+              options = list(`actions-box` = TRUE,
+                             `live-search` = TRUE
+              ),
+              multiple = T,
+              selected = c("#coronavirus","#covid19","#Covid_19","#CoronaCrisis"),
+              width = "100%",
+              inline = F
+            ),
+            tags$br(),
+            radioGroupButtons(inputId = "tweetsOption", 
+                              label = strong("Specify the number of latest tweets use for analysis (time take to run the analysis):"), 
+                              choices = setNames(c(1:5),c("500 (<1 Minutes)","1000 (1 Minutes)","2000 (2 Minutes)","5000 (3 Minutes)","10000 (5 Minutes)")),
+                              selected = "1",
+                              justified = T,
+                              width = "100%",
+                              status = "primary",
+                              direction = "vertical"
+            )
+          )
+        )
+      ),
+      argonColumn(
+        width = 8,
+        plotOutput("workcloud",width = "100%",height = "500px") %>% withSpinner()
+      )
+    ),
+    tags$hr(),
+    argonRow(
+      argonColumn(
+        width = 12,
+        highchartOutput("sentimentPlot") %>% withSpinner()
+      )
+    )
+    
+    
+  )
+})
+
+observeEvent(debounce(reactive(c(input$tweetsOption,input$twitterHashtag)), 1000)(),{
+  time = switch(input$tweetsOption,
+                "1" = "<1 minute",
+                "2" = "1 minute",
+                "3" = "2 minutes",
+                "4" = "3 minutes",
+                "5" = "5 minutes"
+  )
+  tweetsN = switch(input$tweetsOption,
+                "1" = 500,
+                "2" = 1000,
+                "3" = 2000,
+                "4" = 5000,
+                "5" = 10000
+  )
+    progressSweetAlert(session, id = "twitterProgress", 
+                       value = 10, 
+                       total = NULL,
+                       display_pct = T, 
+                       size = NULL, 
+                       status = "success", 
+                       striped = T,
+                       title = paste0("Fetching data from twitter...","(Take approx ",time," to run"))
+    consumer_key <- 'lJPpmqW41pv6K6miqXmcXYemV'
+    consumer_secret <- '01kHQaZqGhmboh7bAUBJIy1rqdqb7QLjan0RQgyNIyWwLOm2u1'
+    access_token <- '1966387032-BDCHsUK08TbtmxOcFuFnKii1Jt94l72tn1Oz5lZ'
+    access_secret <- 'Ry8n90UsUerTmcUnoNxBfVSnwR6fCmV4aC7j02JGQnPPq'
+    setup_twitter_oauth(consumer_key, consumer_secret, access_token, access_secret)
+    tweets <- searchTwitter(paste0(input$twitterHashtag, collapse = " OR "),
+                            n = tweetsN,
+                            lang = "en")
+    updateProgressBar(
+      session = session,
+      id = "twitterProgress",
+      value = 50,
+      title = "Pre-processing data..."
+    )
+    tweetsDF <- twListToDF(tweets)
+    tweetsText <- tweetsDF$text
+    tweetsText <- tolower(tweetsText)
+    tweetsText <- gsub("rt", "", tweetsText)
+    tweetsText <- gsub("@\\w+", "", tweetsText)
+    tweetsText <- gsub("[[:punct:]]", "", tweetsText)
+    tweetsText <- gsub("http\\w+", "", tweetsText)
+    tweetsText <- gsub("[ |\t]{2,}", "", tweetsText)
+    tweetsText <- gsub("^ ", "", tweetsText)
+    tweetsText <- gsub(" $", "", tweetsText)
+    sentimentAnalResult$tweetText = tweetsText
+    sample <- sample(tweetsText, (length(tweetsText)))
+    corpus <- Corpus(VectorSource(list(sample)))
+    corpus <- tm_map(corpus, removePunctuation) %>% suppressWarnings()
+    corpus <- tm_map(corpus, content_transformer(tolower)) %>% suppressWarnings()
+    corpus <- tm_map(corpus, removeNumbers) %>% suppressWarnings()
+    corpus <- tm_map(corpus, stripWhitespace) %>% suppressWarnings()
+    corpus <- tm_map(corpus, removeWords, stopwords('english')) %>% suppressWarnings()
+    
+    corpus <- tm_map(corpus, stemDocument)##obtain word stems
+    sentimentAnalResult$corpus = corpus
+    
+    updateProgressBar(
+      session = session,
+      id = "twitterProgress",
+      value = 90,
+      title = "Generating scores.."
+    )
+    tweetsScores <- get_nrc_sentiment((sentimentAnalResult$tweetText))
+    tweetsScores <- data.frame(colSums(tweetsScores[,]))
+    names(tweetsScores) <- "Score"
+    tweetsScores <- cbind("sentiment" = rownames(tweetsScores),tweetsScores)
+    rownames(tweetsScores) <- NULL
+    sentimentAnalResult$tweetScores = tweetsScores
+    closeSweetAlert(session = session)
+    sendSweetAlert(
+      session = session,
+      title = " Analysis completed !!!",
+      type = "success"
+    )
+  
+})
+
+output$workcloud = renderPlot({
+  req(!is.null(sentimentAnalResult$corpus))
+  wordcloud(sentimentAnalResult$corpus,
+            min.freq = 10,
+            scale = c(5,0.5),
+            colors = brewer.pal(8, "Dark2"),
+            random.color = TRUE)
+})
+
+output$sentimentPlot = renderHighchart({
+  req(!is.null(sentimentAnalResult$tweetScores))
+  tweetsScores = sentimentAnalResult$tweetScores
+  proper = function(x) paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
+  hc <- highchart() %>% 
+    hc_subtitle(text = "Sentiments of people behind the tweets on pandemic CORONAVIRUS",
+                align = "left",
+                style = list(color = "#2b908f", fontWeight = "bold")) %>%
+    hc_xAxis(categories = proper(tweetsScores$sentiment),title = list(text = "Sentiments")) %>%
+    hc_yAxis(title = list(text = "Score")) %>%
+    hc_add_series(name = "Score",data = tweetsScores$Score,showInLegend = F) 
+  
+  hc %>% 
+    hc_chart(type = "column") %>%
+    hc_chart(borderColor = '#EBBA95',
+             borderRadius = 10,
+             borderWidth = 2
+    ) %>%
+    hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
+               shared = TRUE, borderWidth = 5,table = T)
+})
+
+#### to check which countries are new
+# 
+# mapdata <- get_data_from_map(download_map_data("custom/world-palestine-highres"))
+# 
+# dataframeTotal$country[!(dataframeTotal$country %in% mapdata$name)]
+# 
+# [1] "Cruise Ship"
+# [2] "Holy See
