@@ -5,7 +5,8 @@ results = reactiveValues(
   dataframeTotalOldCases = NULL,
   newCasesDeath = NULL,
   dataframeFinal = NULL,
-  newCasesRecovered = NULL
+  newCasesRecovered = NULL,
+  dataframeOldCases = NULL
 )
 
 
@@ -67,161 +68,59 @@ output$dashboard = renderUI({
 
 observe({
   waiter_show(loader)
-  dataframeFinal = coronavirus %>%
-                        dplyr::mutate(country = dplyr::if_else(Country.Region == "US", "United States of America", Country.Region)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "UK", "United Kingdom", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Mainland China", "China", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Saint Barthelemy", "France", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Gibraltar", "United Kingdom", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Palestine", "Israel", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "North Macedonia", "Macedonia", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Iran (Islamic Republic of)", "Iran", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Republic of Korea", "South Korea", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Korea, South", "South Korea", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Taipei and environs", "Taiwan", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Taiwan*", "Taiwan", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Viet Nam", "Vietnam", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "occupied Palestinian territory", "Israel", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Russian Federation", "Russia", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "French Guiana", "France", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Hong Kong SAR", "China", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Macao SAR", "China", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Serbia", "Republic of Serbia", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Republic of Moldova", "Moldova", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Martinique", "France", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Czechia", "Czech Republic", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Reunion", "France", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Guadeloupe", "France", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Aruba", "Netherlands", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Congo (Kinshasa)", "Democratic Republic of the Congo", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Congo (Brazzaville)", "Republic of Congo", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Republic of the Congo", "Republic of Congo", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Tanzania", "United Republic of Tanzania", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "The Gambia", "Gambia", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Gambia, The", "Gambia", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
-                        dplyr::mutate(country = dplyr::if_else(country == "Bahamas, The", "The Bahamas", country)) %>%
-                        dplyr::mutate(country = trimws(country))
-  results$dataframeFinal = dataframeFinal
-  dataframeTotal <- dataframeFinal %>% 
-    dplyr::group_by(Country.Region, type) %>%
-    dplyr::summarise(total = sum(cases)) %>%
-    tidyr::pivot_wider(names_from =  type, 
-                       values_from = total) %>%
-    dplyr::mutate(unrecovered = confirmed - ifelse(is.na(recovered), 0, recovered) - ifelse(is.na(death), 0, death)) %>%
-    dplyr::arrange(-confirmed) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(country = dplyr::if_else(Country.Region == "US", "United States of America", Country.Region)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "UK", "United Kingdom", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Mainland China", "China", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Saint Barthelemy", "France", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Gibraltar", "United Kingdom", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Palestine", "Israel", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "North Macedonia", "Macedonia", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Iran (Islamic Republic of)", "Iran", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Republic of Korea", "South Korea", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Korea, South", "South Korea", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Taipei and environs", "Taiwan", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Taiwan*", "Taiwan", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Viet Nam", "Vietnam", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "occupied Palestinian territory", "Israel", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Russian Federation", "Russia", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "French Guiana", "France", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Hong Kong SAR", "China", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Macao SAR", "China", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Serbia", "Republic of Serbia", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Republic of Moldova", "Moldova", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Martinique", "France", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Czechia", "Czech Republic", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Reunion", "France", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Guadeloupe", "France", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Aruba", "Netherlands", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Congo (Kinshasa)", "Democratic Republic of the Congo", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Congo (Brazzaville)", "Republic of Congo", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Republic of the Congo", "Republic of Congo", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Tanzania", "United Republic of Tanzania", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "The Gambia", "Gambia", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Gambia, The", "Gambia", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
-    dplyr::mutate(country = dplyr::if_else(country == "Bahamas, The", "The Bahamas", country)) %>%
-    dplyr::mutate(country = trimws(country)) %>%
-    select(-Country.Region)
-  dataframeTotal[,1:4] = lapply(dataframeTotal[,1:4], function(x) as.numeric(x))
-  dataframeTotal = dataframeTotal %>%
-    group_by(country) %>%
-    summarise(totalConfirmed = sum(confirmed,na.rm = T),
-              totalDeath = sum(death,na.rm = T),
-              totalRecovered = sum(recovered,na.rm = T),
-              totalUnrecovered = sum(unrecovered,na.rm = T)
-    ) %>%
-    as.data.frame()
+  results$dataframeFinal = coronavirus
+  dataframeTotal <- coronavirus %>% 
+                      dplyr::group_by(countryName) %>%
+                      slice(n()) %>%
+                      ungroup() %>%
+                      dplyr::mutate(Unrecovered = Confirmed - ifelse(is.na(Recovered), 0, Recovered) - ifelse(is.na(Deaths), 0, Deaths)) %>%
+                      dplyr::arrange(-Confirmed) %>%
+                      dplyr::ungroup() %>%
+                      select(-c(date,region,lat,lon))
+  # browser()
+  dataframeTotal[,3:6] = lapply(dataframeTotal[,3:6], function(x) as.numeric(x))
   results$dataframeTotal = dataframeTotal
   df_daily <- coronavirus %>% 
-    dplyr::group_by(date, type) %>%
-    dplyr::summarise(total = sum(cases, na.rm = TRUE)) %>%
-    tidyr::pivot_wider(names_from = type,
-                       values_from = total) %>%
-    dplyr::arrange(date) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(active =  confirmed - death - recovered) %>%
-    dplyr::mutate(confirmed_cum = cumsum(confirmed),
-                  death_cum = cumsum(death),
-                  recovered_cum = cumsum(recovered),
-                  active_cum = cumsum(active))
+                dplyr::group_by(date) %>%
+                dplyr::summarise(totalConfirmed = sum(Confirmed, na.rm = TRUE),
+                                 totalRecovered = sum(Recovered,na.rm = TRUE),
+                                 totalDeaths = sum(Deaths,na.rm = T)
+                                 ) %>%
+                dplyr::arrange(date) %>%
+                dplyr::ungroup() %>%
+                dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) 
   results$dfDaily = df_daily
   
-  max_date <- max(coronavirus$date)
+  max_date <- as.Date(max(coronavirus$date)) 
   newCases = coronavirus %>% 
-              dplyr::filter(type == "confirmed", date == max_date) %>%
-              dplyr::group_by(Country.Region) %>%
-              dplyr::summarise(total_cases = sum(cases)) %>%
-              dplyr::arrange(-total_cases) %>%
-              dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
-              dplyr::ungroup() %>%
-              dplyr::top_n(n = 25, wt = total_cases)
+              dplyr::filter(date == max_date | date == max_date - 1) %>%
+              dplyr::group_by(countryName) %>%
+              mutate(ConfirmedNew = Confirmed - shift(Confirmed,1)) %>% 
+              mutate(RecoveredNew = Recovered - shift(Recovered,1)) %>%
+              mutate(DeathsNew = Deaths - shift(Deaths,1)) %>%
+              slice(n()) %>%
+              ungroup() %>%
+              select(countryName,ConfirmedNew,RecoveredNew,DeathsNew)
   
   results$newCases = newCases
-  newCasesDeaths = coronavirus %>% 
-                    dplyr::filter(type == "death", date == max_date) %>%
-                    dplyr::group_by(Country.Region) %>%
-                    dplyr::summarise(total_cases = sum(cases)) %>%
-                    dplyr::filter(total_cases > 0) %>%
-                    dplyr::arrange(-total_cases) %>%
-                    dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
-                    dplyr::ungroup() 
-  
-  results$newCasesDeath = newCasesDeaths
-  newCasesRecovered = coronavirus %>% 
-                      dplyr::filter(type == "recovered", date == max_date) %>%
-                      dplyr::group_by(Country.Region) %>%
-                      dplyr::summarise(total_cases = sum(cases)) %>%
-                      dplyr::filter(total_cases > 0) %>%
-                      dplyr::arrange(-total_cases) %>%
-                      dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
-                      dplyr::ungroup() 
-  
-  results$newCasesRecovered = newCasesRecovered
-  
-  dataframeTotalOldCases = coronavirus %>% 
-                            dplyr::filter(!(date == max_date)) %>% 
-                            dplyr::group_by(type) %>%
-                            dplyr::summarise(total = sum(cases)) %>%
-                            tidyr::pivot_wider(names_from =  type, 
-                                               values_from = total) %>%
-                            dplyr::mutate(unrecovered = confirmed - ifelse(is.na(recovered), 0, recovered) - ifelse(is.na(death), 0, death)) %>%
-    summarise(totalConfirmed = sum(confirmed,na.rm = T),
-              totalDeath = sum(death,na.rm = T),
-              totalRecovered = sum(recovered,na.rm = T),
-              totalUnrecovered = sum(unrecovered,na.rm = T)
+  dataframeTotalOldCases = coronavirus %>%
+                            dplyr::filter(date == max_date - 1) %>%
+                            dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths) %>%
+    summarise(totalConfirmed = sum(Confirmed,na.rm = T),
+              totalDeath = sum(Deaths,na.rm = T),
+              totalRecovered = sum(Recovered,na.rm = T),
+              totalUnrecovered = sum(Unrecovered,na.rm = T)
     )
   results$dataframeTotalOldCases = dataframeTotalOldCases
+  dataframeOldCases = coronavirus %>%
+                            dplyr::filter(date == max_date - 1) %>%
+                            dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths)
+  results$dataframeOldCases = dataframeOldCases
   waiter_hide()
 })
 
 output$confirmedCount <- renderCountup({
-  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
+  totalConfirmed = sum(results$dataframeTotal$Confirmed,na.rm = T)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
                prefix = "Confirmed ")
@@ -237,8 +136,8 @@ output$confirmedCount <- renderCountup({
   )
 })
 output$activeCount <- renderCountup({
-  totalUnrecovered = sum(results$dataframeTotal$totalUnrecovered,na.rm = T)
-  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
+  totalUnrecovered = sum(results$dataframeTotal$Unrecovered,na.rm = T)
+  totalConfirmed = sum(results$dataframeTotal$Confirmed,na.rm = T)
   activeCasesPer = round(((totalUnrecovered/totalConfirmed)*100),1)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -257,8 +156,8 @@ output$activeCount <- renderCountup({
   )
 })
 output$recoveredCount <- renderCountup({
-  totalRecovered = sum(results$dataframeTotal$totalRecovered,na.rm = T)
-  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
+  totalRecovered = sum(results$dataframeTotal$Recovered,na.rm = T)
+  totalConfirmed = sum(results$dataframeTotal$Confirmed,na.rm = T)
   totalRecoveredPer = round(((totalRecovered/totalConfirmed)*100),1)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -277,8 +176,8 @@ output$recoveredCount <- renderCountup({
   )
 })
 output$deathCount <- renderCountup({
-  totalDeath = sum(results$dataframeTotal$totalDeath,na.rm = T)
-  totalConfirmed = sum(results$dataframeTotal$totalConfirmed,na.rm = T)
+  totalDeath = sum(results$dataframeTotal$Deaths,na.rm = T)
+  totalConfirmed = sum(results$dataframeTotal$Confirmed,na.rm = T)
   totalDeathPer = round(((totalDeath/totalConfirmed)*100),1)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -296,8 +195,10 @@ output$deathCount <- renderCountup({
   )
 })
 output$countryCount <- renderCountup({
-  x = results$dataframeTotal$country %>% 
-      unique() %>%                                                                         length()
+  x = results$dataframeTotal %>%
+      filter(Confirmed > 0) %>%
+      select(countryName) %>%
+      unique() %>%                                                                              nrow()
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
                prefix = "Total countries affected: "
@@ -416,12 +317,12 @@ output$chartUI = renderUI({
           pickerInput(
             "populationSelect",
             label = strong("Countries showing in the geospatial map: "),
-            choices = results$dataframeTotal$country,
+            choices = results$dataframeTotal$countryName,
             options = list(`actions-box` = TRUE,
                            `live-search` = TRUE
             ),
             multiple = T,
-            selected = results$dataframeTotal$country,
+            selected = results$dataframeTotal$countryName,
             width = "100%",
             inline = F
           )
@@ -498,9 +399,9 @@ output$worldMap <- renderHighchart({
   x = input$highchartOption %>% as.numeric()
   y = input$populationSelect %>% tolower()
   data = results$dataframeTotal %>% 
-         filter(str_detect(tolower(country), pattern = paste(y,collapse = "|"))) 
-  value = switch(x,"totalConfirmed","totalRecovered","totalDeath","totalUnrecovered")
-  colnames(data)[1] = "name"
+         filter(str_detect(tolower(countryName), pattern = paste(y,collapse = "|"))) 
+  value = switch(x,"Confirmed","Recovered","Deaths","Unrecovered")
+  colnames(data)[2] = "name"
   highchart(type = "map",width = "100%",height = "100%") %>%
     hc_add_series_map(map = worldgeojson, df = data, value = value, joinBy = "name") %>%
     hc_colorAxis(stops = color_stops()) %>%
@@ -518,7 +419,7 @@ output$cumulativePlot = renderHighchart({
   recovered_color <- "forestgreen"
   death_color <- "red"
   df_daily = results$dfDaily
-  x = max(df_daily$confirmed_cum,df_daily$active_cum,df_daily$death_cum,df_daily$recovered_cum)
+  x = max(df_daily$totalConfirmed,df_daily$totalUnrecovered,df_daily$totalDeaths,df_daily$totalRecovered)
   y = nchar(x) - 1
   yLimit = x %>% round(-y)
   hc <- highchart() %>% 
@@ -527,10 +428,10 @@ output$cumulativePlot = renderHighchart({
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = df_daily$date) %>%
     hc_yAxis(title = list(text = "Cumulative Number of Cases")) %>%
-    hc_add_series(name = "Confirmed",data = df_daily$confirmed_cum) %>% 
-    hc_add_series(name = "Active",data = df_daily$active_cum) %>% 
-    hc_add_series(name = "Recovered", data = df_daily$recovered_cum) %>% 
-    hc_add_series(name = "Death", data = df_daily$death_cum)
+    hc_add_series(name = "Confirmed",data = df_daily$totalConfirmed) %>% 
+    hc_add_series(name = "Active",data = df_daily$totalUnrecovered) %>% 
+    hc_add_series(name = "Recovered", data = df_daily$totalRecovered) %>% 
+    hc_add_series(name = "Death", data = df_daily$totalDeaths)
   
   hc %>% 
     hc_chart(borderColor = '#EBBA95',
@@ -544,8 +445,9 @@ output$cumulativePlot = renderHighchart({
 
 output$totalCasesPlot = renderHighchart({
   x = results$dataframeTotal %>%
-    arrange(desc(totalConfirmed)) %>%
-    .[1:15,]
+        select(-countryCode) %>%
+        arrange(desc(Confirmed)) %>%
+        .[1:15,]
   confirmed_color = "#172b4d"
   active_color <- "#1f77b4"
   recovered_color <- "forestgreen"
@@ -554,12 +456,12 @@ output$totalCasesPlot = renderHighchart({
     hc_subtitle(text = "Total  Cases (Top 15 countries)",
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
-    hc_xAxis(categories = x$country) %>%
+    hc_xAxis(categories = x$countryName) %>%
     hc_yAxis(title = list(text = "Total Cases (Log scale)"),type = "logarithmic") %>%
-    hc_add_series(name = "Confirmed",data = x$totalConfirmed) %>% 
-    hc_add_series(name = "Active",data = x$totalUnrecovered) %>% 
-    hc_add_series(name = "Recovered", data = x$totalRecovered) %>% 
-    hc_add_series(name = "Death", data = x$totalDeath)
+    hc_add_series(name = "Confirmed",data = x$Confirmed) %>% 
+    hc_add_series(name = "Active",data = x$Unrecovered) %>% 
+    hc_add_series(name = "Recovered", data = x$Recovered) %>% 
+    hc_add_series(name = "Death", data = x$Deaths)
   hc %>% 
     hc_chart(type = "column") %>%
     hc_chart(borderColor = '#EBBA95',
@@ -572,15 +474,18 @@ output$totalCasesPlot = renderHighchart({
 })
 
 output$newCasesPlot = renderHighchart({
-  x = results$newCases
+  x = results$newCases %>%
+        select(countryName,ConfirmedNew) %>%
+        arrange(-ConfirmedNew) %>%
+        top_n(n = 25,wt = ConfirmedNew)
   death_color <- "orange"
   hc <- highchart() %>% 
     hc_subtitle(text = "New  Cases (Top 25 countries)",
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
-    hc_xAxis(categories = x$country) %>%
+    hc_xAxis(categories = x$countryName) %>%
     hc_yAxis(title = list(text = "New Cases")) %>%
-    hc_add_series(name = "Countries",data = x$total_cases) 
+    hc_add_series(name = "Countries",data = x$ConfirmedNew) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -593,15 +498,18 @@ output$newCasesPlot = renderHighchart({
                shared = TRUE, borderWidth = 5,table = T)
 })
 output$newCasesDeathsPlot = renderHighchart({
-  x = results$newCasesDeath
+  x = results$newCases %>%
+        select(countryName,DeathsNew) %>%
+        arrange(-DeathsNew) %>%
+        top_n(n = 25,wt = DeathsNew)
   death_color <- "red"
   hc <- highchart() %>% 
-    hc_subtitle(text = "New Deaths (All countries having atleast 1 death yesterday)",
+    hc_subtitle(text = "New Deaths (Top 25 countries)",
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
-    hc_xAxis(categories = x$country) %>%
+    hc_xAxis(categories = x$countryName) %>%
     hc_yAxis(title = list(text = "New Deaths")) %>%
-    hc_add_series(name = "Countries",data = x$total_cases) 
+    hc_add_series(name = "Countries",data = x$DeathsNew) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -614,15 +522,18 @@ output$newCasesDeathsPlot = renderHighchart({
                shared = TRUE, borderWidth = 5,table = T)
 })
 output$newCasesRecoveredPlot = renderHighchart({
-  x = results$newCasesRecovered
+  x = results$newCases %>%
+        select(countryName,RecoveredNew) %>%
+        arrange(-RecoveredNew) %>%
+        top_n(n = 25,wt = RecoveredNew)
   death_color <- "green"
   hc <- highchart() %>% 
-    hc_subtitle(text = "Newly Recovered (All countries having atleast 1 recovered case yesterday)",
+    hc_subtitle(text = "Newly Recovered (Top 25 countries)",
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
-    hc_xAxis(categories = x$country) %>%
+    hc_xAxis(categories = x$countryName) %>%
     hc_yAxis(title = list(text = "New Recovered")) %>%
-    hc_add_series(name = "Countries",data = x$total_cases) 
+    hc_add_series(name = "Countries",data = x$RecoveredNew) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -637,11 +548,12 @@ output$newCasesRecoveredPlot = renderHighchart({
 
 output$dataTableCountryWise = renderDataTable({
   x = results$dataframeTotal %>%
-        arrange(desc(totalConfirmed)) %>%
-        mutate(totalActivePer = totalUnrecovered/totalConfirmed) %>%
-        mutate(totalRecoveredPer = totalRecovered/totalConfirmed) %>%
-        mutate(totalDeathPer = totalDeath/totalConfirmed) %>%
-    select(Country = country, Confirmed = totalConfirmed, Active = totalUnrecovered,Recovered = totalRecovered,Deaths = totalDeath,"Active (%)" = totalActivePer,"Recovered (%)" = totalRecoveredPer,"Deaths (%)" = totalDeathPer)
+        select(-countryCode) %>%
+        arrange(desc(Confirmed)) %>%
+        mutate(totalActivePer = Unrecovered/Confirmed) %>%
+        mutate(totalRecoveredPer = Recovered/Confirmed) %>%
+        mutate(totalDeathPer = Deaths/Confirmed) %>%
+    select(Country = countryName, Confirmed = Confirmed, Active = Unrecovered,Recovered = Recovered,Deaths = Deaths,"Active (%)" = totalActivePer,"Recovered (%)" = totalRecoveredPer,"Deaths (%)" = totalDeathPer)
   datatable(x,
             extensions = 'Buttons',
             rownames = FALSE,
@@ -701,7 +613,7 @@ output$countrySpecificCards = renderUI({
           pickerInput(
             "countrySelect",
             label = strong("Showing results from "),
-            choices = results$dataframeTotal$country,
+            choices = results$dataframeTotal$countryName,
             options = list(
               `live-search` = TRUE
             ),
@@ -726,12 +638,11 @@ output$countrySpecificCards = renderUI({
             background_color = "warning",
             gradient = T,
             width = 12
-          )
-          # h6(paste0("Yesterday: ",
-          #           prettyNum(results$dataframeTotalOldCases$totalConfirmed,big.mark = ",")
-          # ), 
-          # style = 'text-align:center;
-          # font-size:15px;')
+          ),
+          argonRow(
+            center = T,
+            uiOutput("yesterdayConfirmedCountry")
+           )
           ),
         argonColumn(
           width = 3,
@@ -744,6 +655,10 @@ output$countrySpecificCards = renderUI({
             background_color = "info",
             gradient = T,
             width = 12
+          ),
+          argonRow(
+            center = T,
+            uiOutput("yesterdayActiveCountry")
           )
           # h6(paste0("Yesterday: ",
           #           prettyNum(results$dataframeTotalOldCases$totalUnrecovered,big.mark = ",")
@@ -762,12 +677,11 @@ output$countrySpecificCards = renderUI({
             background_color = "success",
             gradient = T,
             width = 12
+          ),
+          argonRow(
+            center = T,
+            uiOutput("yesterdayRecoveredCountry")
           )
-          # h6(paste0("Yesterday: ",
-          #           prettyNum(results$dataframeTotalOldCases$totalRecovered,big.mark = ",")
-          # ), 
-          # style = 'text-align:center;
-          # font-size:15px;')
           ),
         argonColumn(
           width = 3,
@@ -780,21 +694,67 @@ output$countrySpecificCards = renderUI({
             background_color = "danger",
             gradient = T,
             width = 12
+          ),
+          argonRow(
+            center = T,
+            uiOutput("yesterdayDeathsCountry")
           )
-          # h6(paste0("Yesterday: ",
-          #           prettyNum(results$dataframeTotalOldCases$totalDeath,big.mark = ",")
-          # ), 
-          # style = 'text-align:center;
-          # font-size:15px;')
           )
         )
       )
 })
 
+output$yesterdayConfirmedCountry = renderUI({
+  req(!is.null(input$countrySelect) )
+  h6(paste0("Yesterday: ",
+            prettyNum(results$dataframeOldCases %>%
+                             filter(countryName == input$countrySelect) %>%
+                             .["Confirmed"],
+                      big.mark = ",")
+  ),
+  style = 'text-align:center;
+  font-size:15px;')
+})
+
+output$yesterdayActiveCountry = renderUI({
+  req(!is.null(input$countrySelect) )
+  h6(paste0("Yesterday: ",
+            prettyNum(results$dataframeOldCases %>%
+                        filter(countryName == input$countrySelect) %>%
+                        .["Unrecovered"],
+                      big.mark = ",")
+  ),
+  style = 'text-align:center;
+  font-size:15px;')
+})
+output$yesterdayRecoveredCountry = renderUI({
+  req(!is.null(input$countrySelect) )
+  h6(paste0("Yesterday: ",
+            prettyNum(results$dataframeOldCases %>%
+                        filter(countryName == input$countrySelect) %>%
+                        .["Recovered"],
+                      big.mark = ",")
+  ),
+  style = 'text-align:center;
+  font-size:15px;')
+})
+
+output$yesterdayDeathsCountry = renderUI({
+  req(!is.null(input$countrySelect) )
+  h6(paste0("Yesterday: ",
+            prettyNum(results$dataframeOldCases %>%
+                        filter(countryName == input$countrySelect) %>%
+                        .["Deaths"],
+                      big.mark = ",")
+  ),
+  style = 'text-align:center;
+  font-size:15px;')
+})
+
 output$confirmedCountCountry <- renderCountup({
   x = results$dataframeTotal %>% 
-        filter(country == input$countrySelect)
-  totalConfirmed = sum(x$totalConfirmed,na.rm = T)
+        filter(countryName == input$countrySelect)
+  totalConfirmed = x$Confirmed
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
                prefix = "Confirmed ")
@@ -811,9 +771,9 @@ output$confirmedCountCountry <- renderCountup({
 })
 output$activeCountCountry <- renderCountup({
   x = results$dataframeTotal %>% 
-         filter(country == input$countrySelect)
-  totalUnrecovered = sum(x$totalUnrecovered,na.rm = T)
-  totalConfirmed = sum(x$totalConfirmed,na.rm = T)
+        filter(countryName == input$countrySelect)
+  totalUnrecovered = x$Unrecovered
+  totalConfirmed = x$Confirmed
   activeCasesPer = round(((totalUnrecovered/totalConfirmed)*100),1)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -833,9 +793,9 @@ output$activeCountCountry <- renderCountup({
 })
 output$recoveredCountCountry <- renderCountup({
   x = results$dataframeTotal %>% 
-        filter(country == input$countrySelect)
-  totalRecovered = sum(x$totalRecovered,na.rm = T)
-  totalConfirmed = sum(x$totalConfirmed,na.rm = T)
+          filter(countryName == input$countrySelect)
+  totalRecovered = x$Recovered
+  totalConfirmed = x$Confirmed
   totalRecoveredPer = round(((totalRecovered/totalConfirmed)*100),1)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -855,9 +815,9 @@ output$recoveredCountCountry <- renderCountup({
 })
 output$deathCountCountry <- renderCountup({
   x = results$dataframeTotal %>% 
-        filter(country == input$countrySelect)
-  totalDeath = sum(x$totalDeath,na.rm = T)
-  totalConfirmed = sum(x$totalConfirmed,na.rm = T)
+         filter(countryName == input$countrySelect)
+  totalDeath = x$Deaths
+  totalConfirmed = x$Confirmed
   totalDeathPer = round(((totalDeath/totalConfirmed)*100),1)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -921,32 +881,26 @@ output$cumulativeCountryPlot = renderHighchart({
   active_color <- "#1f77b4"
   recovered_color <- "forestgreen"
   death_color <- "red"
-  df_daily <- results$dataframeFinal %>% 
-                filter(country == input$countrySelect) %>%
-                dplyr::group_by(date, type) %>%
-                dplyr::summarise(total = sum(cases, na.rm = TRUE)) %>%
-                tidyr::pivot_wider(names_from = type,
-                                   values_from = total) %>%
+  df_daily <- coronavirus %>% 
+                filter(countryName == input$countrySelect) %>%
+                dplyr::group_by(date) %>%
+                dplyr::summarise(totalConfirmed = sum(Confirmed, na.rm = TRUE),
+                                 totalRecovered = sum(Recovered,na.rm = TRUE),
+                                 totalDeaths = sum(Deaths,na.rm = T)
+                ) %>%
                 dplyr::arrange(date) %>%
                 dplyr::ungroup() %>%
-                dplyr::mutate(active =  confirmed - death - recovered) %>%
-                dplyr::mutate(confirmed_cum = cumsum(confirmed),
-                              death_cum = cumsum(death),
-                              recovered_cum = cumsum(recovered),
-                              active_cum = cumsum(active))
-  x = max(df_daily$confirmed_cum,df_daily$active_cum,df_daily$death_cum,df_daily$recovered_cum)
-  y = nchar(x) - 1
-  yLimit = x %>% round(-y)
+                dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) 
   hc <- highchart() %>% 
     hc_subtitle(text = paste0("Cumulative Cases in ",input$countrySelect),
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = df_daily$date) %>%
     hc_yAxis(title = list(text = "Cumulative Number of Cases")) %>%
-    hc_add_series(name = "Confirmed",data = df_daily$confirmed_cum) %>% 
-    hc_add_series(name = "Active",data = df_daily$active_cum) %>% 
-    hc_add_series(name = "Recovered", data = df_daily$recovered_cum) %>% 
-    hc_add_series(name = "Death", data = df_daily$death_cum)
+    hc_add_series(name = "Confirmed",data = df_daily$totalConfirmed) %>% 
+    hc_add_series(name = "Active",data = df_daily$totalUnrecovered) %>% 
+    hc_add_series(name = "Recovered", data = df_daily$totalRecovered) %>% 
+    hc_add_series(name = "Death", data = df_daily$totalDeaths)
   
   hc %>% 
     hc_chart(borderColor = '#EBBA95',
@@ -960,11 +914,14 @@ output$cumulativeCountryPlot = renderHighchart({
 
 output$newCasesCountryPlot = renderHighchart({
   newCases = results$dataframeFinal %>% 
-              dplyr::filter(country == input$countrySelect,type == "confirmed") %>%
-              dplyr::group_by(date) %>%
-              dplyr::summarise(total_cases = sum(cases)) %>%
-              # dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
-              dplyr::ungroup() 
+              select(date,countryName,Confirmed) %>%
+              dplyr::filter(countryName == input$countrySelect) %>%
+              mutate(confirmedDaily = if_else(is.na(Confirmed - shift(Confirmed,1)),
+                                      Confirmed,
+                                      Confirmed - shift(Confirmed,1)
+                                      )
+                     
+                     ) 
   x = newCases
   death_color <- "orange"
   hc <- highchart() %>% 
@@ -973,7 +930,7 @@ output$newCasesCountryPlot = renderHighchart({
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$date) %>%
     hc_yAxis(title = list(text = "New Cases")) %>%
-    hc_add_series(name = "Countries",data = x$total_cases) 
+    hc_add_series(name = "Countries",data = x$confirmedDaily) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -988,11 +945,14 @@ output$newCasesCountryPlot = renderHighchart({
 
 output$newCasesDeathCountryPlot = renderHighchart({
   newCases = results$dataframeFinal %>% 
-    dplyr::filter(country == input$countrySelect,type == "death") %>%
-    dplyr::group_by(date) %>%
-    dplyr::summarise(total_cases = sum(cases)) %>%
-    # dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
-    dplyr::ungroup() 
+                select(date,countryName,Deaths) %>%
+                dplyr::filter(countryName == input$countrySelect) %>%
+                mutate(deathDaily = if_else(is.na(Deaths - shift(Deaths,1)),
+                                            Deaths,
+                                            Deaths - shift(Deaths,1)
+                )
+                
+                )
   x = newCases
   death_color <- "red"
   hc <- highchart() %>% 
@@ -1001,7 +961,7 @@ output$newCasesDeathCountryPlot = renderHighchart({
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$date) %>%
     hc_yAxis(title = list(text = "Deaths")) %>%
-    hc_add_series(name = "Countries",data = x$total_cases) 
+    hc_add_series(name = "Countries",data = x$deathDaily) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -1016,11 +976,14 @@ output$newCasesDeathCountryPlot = renderHighchart({
 
 output$newCasesRecoveredCountryPlot = renderHighchart({
   newCases = results$dataframeFinal %>% 
-    dplyr::filter(country == input$countrySelect,type == "recovered") %>%
-    dplyr::group_by(date) %>%
-    dplyr::summarise(total_cases = sum(cases)) %>%
-    # dplyr::mutate(country = factor(Country.Region, levels = Country.Region)) %>%
-    dplyr::ungroup() 
+                select(date,countryName,Recovered) %>%
+                dplyr::filter(countryName == input$countrySelect) %>%
+                mutate(recoveredDaily = if_else(is.na(Recovered - shift(Recovered,1)),
+                                            Recovered,
+                                            Recovered - shift(Recovered,1)
+                )
+                
+                )
   x = newCases
   death_color <- "green"
   hc <- highchart() %>% 
@@ -1029,7 +992,7 @@ output$newCasesRecoveredCountryPlot = renderHighchart({
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$date) %>%
     hc_yAxis(title = list(text = "Recovered")) %>%
-    hc_add_series(name = "Countries",data = x$total_cases) 
+    hc_add_series(name = "Countries",data = x$recoveredDaily) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -1221,7 +1184,7 @@ output$sentimentPlot = renderHighchart({
 #### to check which countries are new
 # 
 # mapdata <- get_data_from_map(download_map_data("custom/world-palestine-highres"))
-# 
+# # 
 # dataframeTotal$country[!(dataframeTotal$country %in% mapdata$name)]
 # 
 # [1] "Cruise Ship"
