@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v1.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-03-23 09:00:00 IST"
+lastUpdate = "2020-03-23"
 
 loader <- tagList(
   waiter::spin_loaders(42),
@@ -48,12 +48,7 @@ ui <- tagList( # dependencies
             argonColumn(
               width = 12,
               center = T,
-              h6(paste0("Last Updated: ",lastUpdate), style = 'color:white;font-size:13px;')
-            ),
-            argonColumn(
-              width = 12,
-              center = T,
-              h5(HTML("Creator and maintainer: <a href='mailto:shubhram1992@gmail.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:13px;')
+              h5(HTML("Creator and maintainer: <a href='www.shubhrampandey.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:15px;')
             ),
             argonColumn(
               width = 12,
@@ -105,7 +100,10 @@ ui <- tagList( # dependencies
     body = argonDashBody(
       tags$head( tags$meta(name = "viewport", content = "width=1600"),uiOutput("body")),
       tags$br(),
-      h1("This app is under maintenance. Kindly give us some time to resolve the issue!!! The data shown here are till 20th march.",style = 'color:Red;font-size:25px;text-align:center;'),
+      h5("Important Note:",style = 'color:Red;font-size:20px;text-align:Left;'),
+      p("1. Now, WHO is not providng the number of recovered cases, hence webscrapping was done to obtain the same. In case of any discrepnecy in the numbers please contact with me.",style = 'color:Red;font-size:15px;text-align:Left;'),
+      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;'),
+      tags$hr(),
            dashboardUI
     )
   )
