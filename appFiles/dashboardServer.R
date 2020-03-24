@@ -102,6 +102,8 @@ observe({
                         dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
                         dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
                         dplyr::mutate(country = dplyr::if_else(country == "Bahamas, The", "The Bahamas", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Cabo Verde", "Cape Verde", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Timor-Leste", "East Timor", country)) %>%
                         dplyr::mutate(country = trimws(country))
   results$dataframeFinal = dataframeFinal
   dataframeTotal <- dataframeFinal %>% 
@@ -146,8 +148,11 @@ observe({
     dplyr::mutate(country = dplyr::if_else(country == "Cote d'Ivoire", "Ivory Coast", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Eswatini", "Swaziland", country)) %>%
     dplyr::mutate(country = dplyr::if_else(country == "Bahamas, The", "The Bahamas", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Cabo Verde", "Cape Verde", country)) %>%
+    dplyr::mutate(country = dplyr::if_else(country == "Timor-Leste", "East Timor", country)) %>%
     dplyr::mutate(country = trimws(country)) %>%
     select(-Country.Region)
+  # browser()
   dataframeTotal[,1:4] = lapply(dataframeTotal[,1:4], function(x) as.numeric(x))
   dataframeTotal = dataframeTotal %>%
     group_by(country) %>%
@@ -1221,7 +1226,7 @@ output$sentimentPlot = renderHighchart({
 #### to check which countries are new
 # 
 # mapdata <- get_data_from_map(download_map_data("custom/world-palestine-highres"))
-# 
+# # 
 # dataframeTotal$country[!(dataframeTotal$country %in% mapdata$name)]
 # 
 # [1] "Cruise Ship"

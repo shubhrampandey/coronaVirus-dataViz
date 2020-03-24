@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v1.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-03-19 09:00:00 IST"
+lastUpdate = "2020-03-23 09:00:00 IST"
 
 loader <- tagList(
   waiter::spin_loaders(42),
@@ -105,6 +105,7 @@ ui <- tagList( # dependencies
     body = argonDashBody(
       tags$head( tags$meta(name = "viewport", content = "width=1600"),uiOutput("body")),
       tags$br(),
+      h1("This app is under maintenance. Kindly give us some time to resolve the issue!!! The data shown here are till 20th march.",style = 'color:Red;font-size:25px;text-align:center;'),
            dashboardUI
     )
   )
