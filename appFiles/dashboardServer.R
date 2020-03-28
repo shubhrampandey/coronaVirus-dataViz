@@ -78,7 +78,6 @@ observe({
                       dplyr::ungroup() %>%
                       select(-c(date,region,lat,lon))
   # browser()
-  dataframeTotal[,3:6] = lapply(dataframeTotal[,3:6], function(x) as.numeric(x))
   results$dataframeTotal = dataframeTotal
   df_daily <- coronavirus %>% 
                 dplyr::group_by(date) %>%
@@ -401,7 +400,7 @@ output$worldMap <- renderHighchart({
   data = results$dataframeTotal %>% 
          filter(str_detect(tolower(countryName), pattern = paste(y,collapse = "|"))) 
   value = switch(x,"Confirmed","Recovered","Deaths","Unrecovered")
-  colnames(data)[2] = "name"
+  colnames(data)[5] = "name"
   highchart(type = "map",width = "100%",height = "100%") %>%
     hc_add_series_map(map = worldgeojson, df = data, value = value, joinBy = "name") %>%
     hc_colorAxis(stops = color_stops()) %>%
@@ -1183,9 +1182,9 @@ output$sentimentPlot = renderHighchart({
 
 #### to check which countries are new
 # 
-# mapdata <- get_data_from_map(download_map_data("custom/world-palestine-highres"))
-# # 
-# dataframeTotal$country[!(dataframeTotal$country %in% mapdata$name)]
+# mapdata <- get_data_from_map(download_map_data("custom/world"))
+# # # 
+# results$dataframeTotal$countryName[!(results$dataframeTotal$countryName %in% mapdata$name)]
 # 
 # [1] "Cruise Ship"
 # [2] "Holy See
