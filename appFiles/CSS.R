@@ -84,6 +84,9 @@ CSS =
           margin-left: -15px;
           flex-wrap: wrap;
       }
+      a {
+      color: #f7fafc;
+      }
       
       th {
       text-align: center;

@@ -1,6 +1,6 @@
 ##### Global: load libraries #####
-if (!require(stringr)) {install.packages("stringr"); library(stringr)}
 if (!require(shiny)) {install.packages("shiny"); library(shiny)}
+if (!require(shinyjs)) {install.packages("shinyjs"); library(shinyjs)}
 if (!require(highcharter)) {install.packages("highcharter"); library(highcharter)}
 if (!require(dplyr)) {install.packages("dplyr"); library(dplyr)}
 if (!require(purrr)) {install.packages("purrr"); library(purrr)}
@@ -23,6 +23,7 @@ if (!require(stringi)) {install.packages("stringi"); library(stringi)}
 if (!require(topicmodels)) {install.packages("topicmodels"); library(topicmodels)}
 if (!require(ROAuth)) {install.packages("ROAuth"); library(ROAuth)}
 if (!require(wordcloud)) {install.packages("wordcloud"); library(wordcloud)}
+if (!require(shinyBS)) {install.packages("shinyBS"); library(shinyBS)}
 
 
 
