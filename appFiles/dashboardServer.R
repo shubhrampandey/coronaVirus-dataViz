@@ -408,7 +408,7 @@ output$worldMap <- renderHighchart({
     hc_exporting(enabled = TRUE,filename = value) %>% 
     hc_add_theme(hc_theme_ffx()) %>%
     hc_chart(zoomType = "xy") %>%
-    hc_mapNavigation(enabled = TRUE) 
+    hc_mapNavigation(enabled = TRUE)
   
 })
 
@@ -1027,6 +1027,15 @@ output$sentimentUI = renderUI({
         argonRow(
           argonColumn(
             width = 12,
+            argonRow(
+              center = T,
+              actionBttn(
+                inputId = "runSentiment",
+                label = "Run Sentiment Analysis",
+                color = "warning",
+                block = T
+              )
+            ),
             pickerInput(
               "twitterHashtag",
               label = strong("Please select the hashtags you want to include in sentiment analysis: "),
@@ -1039,7 +1048,6 @@ output$sentimentUI = renderUI({
               width = "100%",
               inline = F
             ),
-            tags$br(),
             radioGroupButtons(inputId = "tweetsOption", 
                               label = strong("Specify the number of latest tweets use for analysis (time take to run the analysis):"), 
                               choices = setNames(c(1:5),c("500 (<1 Minutes)","1000 (1 Minutes)","2000 (2 Minutes)","5000 (3 Minutes)","10000 (5 Minutes)")),
@@ -1069,7 +1077,8 @@ output$sentimentUI = renderUI({
   )
 })
 
-observeEvent(debounce(reactive(c(input$tweetsOption,input$twitterHashtag)), 1000)(),{
+observeEvent(input$runSentiment,{
+  req(c(!is.null(input$tweetsOption),!is.null(input$twitterHashtag)))
   time = switch(input$tweetsOption,
                 "1" = "<1 minute",
                 "2" = "1 minute",

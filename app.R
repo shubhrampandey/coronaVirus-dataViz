@@ -4,13 +4,24 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v1.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-03-28"
+lastUpdate = "2020-04-01"
 
 loader <- tagList(
   waiter::spin_loaders(42),
   br(),
   h3("Loading data")
 )
+
+jsToggleFS <- 'shinyjs.toggleFullScreen = function() {
+var element = document.documentElement,
+enterFS = element.requestFullscreen || element.msRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen,
+exitFS = document.exitFullscreen || document.msExitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen;
+if (!document.fullscreenElement && !document.msFullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement) {
+enterFS.call(element);
+} else {
+exitFS.call(document);
+}
+}'
 
 source("appFiles/packageLoad.R")
 source("appFiles/dataLoad.R")
@@ -20,6 +31,8 @@ source("appFiles/dashboardPage.R", local = TRUE)
 ui <- tagList( # dependencies
   use_waiter(),
   useSweetAlert(),
+  useShinyjs(),
+  extendShinyjs(text = jsToggleFS),
   waiter::waiter_show_on_load(loader, color = "#000"),
 # shows before anything else
   ##### CSS and style functions #####
@@ -33,13 +46,13 @@ ui <- tagList( # dependencies
       top_padding = 2,
       bottom_padding = 0,
       background_img = "coronavirus.jpg",
-      height = 90,
+      height = 70,
       argonRow(
         argonColumn(width = 9,
                     h4(appLongName, style = 'color:white;
                        text-align:left;
                        vertical-align: middle;
-                       font-size:45px;')
+                       font-size:35px;')
                     ),
         argonColumn(
           width = 3,
@@ -56,7 +69,6 @@ ui <- tagList( # dependencies
                 side = "right",
                 argonRow(
                   center = T,
-                  
                   argonColumn(
                     width = 1,
                     argonNavItem(
@@ -88,10 +100,25 @@ ui <- tagList( # dependencies
                   )
                 )
               )
+              
             )
           )
+        ),
+        fixedPanel(
+          div(
+            actionBttn("fullScreen",
+                       style = "material-circle",
+                       icon = icon("arrows-alt"),
+                       size = "s",
+                       color = "warning"),
+            bsPopover("fullScreen", title = NULL, content = "Click to view in full screen", placement = "left", trigger = "hover",
+                      options = NULL),
+            onclick = "shinyjs.toggleFullScreen();"
+          ),
+          top = 50,
+          right = 10
+          
         )
-        
                     )
       
       
@@ -100,11 +127,11 @@ ui <- tagList( # dependencies
     body = argonDashBody(
       tags$head( tags$meta(name = "viewport", content = "width=1600"),uiOutput("body")),
       tags$br(),
-      h5("Important Note:",style = 'color:Red;font-size:20px;text-align:Left;'),
-      p("1. Now, WHO is not providng the number of recovered cases, hence webscrapping was done to obtain the same. In case of any discrepnecy in the numbers please contact with me.",style = 'color:Red;font-size:15px;text-align:Left;'),
-      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;'),
+           dashboardUI,
       tags$hr(),
-           dashboardUI
+      h5("Important Note:",style = 'color:Red;font-size:20px;text-align:Left;'),
+      p("1. The data used in this dashboard extracted from webscrapping. In case of any discrepnecy in the numbers please contact with me.",style = 'color:Red;font-size:15px;text-align:Left;'),
+      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;')
     )
   )
   )
