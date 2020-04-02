@@ -6,7 +6,8 @@ results = reactiveValues(
   newCasesDeath = NULL,
   dataframeFinal = NULL,
   newCasesRecovered = NULL,
-  dataframeOldCases = NULL
+  dataframeOldCases = NULL,
+  modelFit = NULL
 )
 
 
@@ -20,13 +21,29 @@ output$dashboard = renderUI({
     width = 12,
     iconList = list(
       icon("tachometer-alt"), 
-      icon("globe"), 
+      icon("not-equal"), 
+      icon("chart-line"),
       icon("twitter")
     ),
     # analysis setting tab -----
     argonTab(
       tabName = "Dashboard",
       active = T,
+      tags$head(tags$style(type = "text/css", "
+             #loadmessage {
+                           position: fixed;
+                           top: 0px;
+                           left: 0px;
+                           width: 100%;
+                           padding: 5px 0px 5px 0px;
+                           text-align: center;
+                           font-weight: bold;
+                           font-size: 100%;
+                           color: #000000;
+                           background-color: #CCFF66;
+                           z-index: 105;
+}
+  ")),
       argonRow(
         argonColumn(
           width = 12,
@@ -40,29 +57,74 @@ output$dashboard = renderUI({
           uiOutput("chartUI") %>% withSpinner()
         )
       ),
-      tags$hr(),
       argonRow(
         argonColumn(
           width = 12,
           dataTableOutput("dataTableCountryWise") %>% withSpinner()
           
         )
-      )
+      ),
+      conditionalPanel(condition = "$('html').hasClass('shiny-busy')",
+                       tags$div("Loading Page! Please wait...",id = "loadmessage"))
     ),
   argonTab(
-    tabName = "Country specific",
+    tabName = "Comparision",
     active = F,
-    uiOutput("countrySpecificCards") %>% withSpinner(),
+    uiOutput("countryComparisionChartsUI") %>% withSpinner(),
     tags$hr(),
-    uiOutput("countrySpecificChartsUI") %>% withSpinner()
-    
+    argonRow(
+      argonColumn(
+        width = 12,
+        dataTableOutput("dataTableCountryCompare") %>% withSpinner()
+        
+      )
+    )
+  ),
+  argonTab(
+    tabName = "Forecasting",
+    active = F,
+    uiOutput("forecastUI") %>% withSpinner()
   ),
   argonTab(
     tabName = "Sentiments",
     active = F,
     uiOutput("sentimentUI") %>% withSpinner()
   )
-  
+  # argonTab(
+  #   tabName = "Debug",
+  #   active = T,
+  #   icon =  icon("wrench"),
+  #   tagList(
+  #       argonRow(
+  #         argonColumn(
+  #           width =  12,
+  #           argonRow(
+  #             argonColumn(
+  #               width =  12,
+  #               textInput(
+  #                 "runRCode",
+  #                 paste0("Run R code",ifelse(Production," (disabled in production version)","")),
+  #                 width = "100%"
+  #               )
+  #             )
+  #           ),
+  #           argonRow(
+  #             argonColumn(
+  #               width =  12,
+  #               actionButton("runRCodeButton","Submit code")
+  #             )
+  #           )
+  #         )
+  #       ),
+  #       argonRow(
+  #         argonColumn(
+  #           width =  12,
+  #           br(),
+  #           verbatimTextOutput("runRCodeOutput")
+  #         )
+  #       )
+  #   )
+  # )
   )
 })
 
@@ -215,7 +277,6 @@ output$countryCount <- renderCountup({
 })
 
 output$cardUI = renderUI({
-  
   tagList(
     argonRow(
       argonColumn(
@@ -309,85 +370,111 @@ output$chartUI = renderUI({
   tagList(
   argonRow(
     argonColumn(
-      width = 3,
+      width = 6,
+      argonRow(
+        argonColumn(
+          width = 3,
+          tags$strong("Aggregate results")
+        ),
+        argonColumn(
+          width = 1,
+          dropdownButton(
+            tagList(
+              prettyRadioButtons(
+                inputId = "aggregatePlotOptions",
+                label = NULL,
+                choices = setNames(c(1:5),c("Total Cases",
+                                            "Cumulative Cases",
+                                            paste0("Confirmed New Cases (",Sys.Date() - 1,")"),
+                                            paste0("Deaths (",Sys.Date() - 1,")"),
+                                            paste0("Recovered (",Sys.Date() - 1,")")
+                                            )
+                                   ),
+                selected = "1",
+                shape = c("round"),
+                outline = T,
+                fill = T,
+                width = "100%"
+              )
+            ),
+            status = "primary",
+            size = "sm",
+            circle = T,
+            icon = icon("wrench"),
+            right = T,
+            margin = "10px",
+            inputId = "aggregatePlotOptionsDropdown"
+          ),
+          bsPopover("aggregatePlotOptionsDropdown", title = NULL, content = "Click to specify the type of plot", placement = "left", trigger = "hover",
+                    options = NULL)
+        )
+      ),
       argonRow(
         argonColumn(
           width = 12,
-          pickerInput(
-            "populationSelect",
-            label = strong("Countries showing in the geospatial map: "),
-            choices = results$dataframeTotal$countryName,
-            options = list(`actions-box` = TRUE,
-                           `live-search` = TRUE
-            ),
-            multiple = T,
-            selected = results$dataframeTotal$countryName,
-            width = "100%",
-            inline = F
+          div(
+            id = "totalCasesPlotDiv",
+            highchartOutput("totalCasesPlot",width = "100%") %>% withSpinner()
+          ),
+          div(
+            id = "cumulativePlotDiv",
+            highchartOutput("cumulativePlot",width = "100%") %>% withSpinner()
+          ),
+          div(
+            id = "newCasesPlotDiv",
+            highchartOutput("newCasesPlot",width = "100%") %>% withSpinner()
+          ),
+          div(
+            id = "newCasesDeathsPlotDiv",
+            highchartOutput("newCasesDeathsPlot",width = "100%") %>% withSpinner()
+          ),
+          div(
+            id = "newCasesRecoveredPlotDiv",
+            highchartOutput("newCasesRecoveredPlot",width = "100%") %>% withSpinner()
           )
-        ),
-        tags$hr(),
-        tags$br(),
-        argonColumn(
-          radioGroupButtons(inputId = "highchartOption", 
-                            label = strong("Specify the outcome to be shown in map:"), 
-                            choices = setNames(c(1:4),c("Total Cases","Recovered cases","Deaths","Active Cases")),
-                            selected = "1",
-                            justified = T,
-                            width = "100%",
-                            status = "primary",
-                            direction = "vertical"
-                            )
         )
       )
     ),
     argonColumn(
-      width = 9,
+      width = 6,
+      argonRow(
+        argonColumn(
+          width = 8,
+          tags$strong("Click on a country to view country specific results")
+        ),
+        argonColumn(
+          width = 1,
+          dropdownButton(
+            tagList(
+              prettyRadioButtons(
+                inputId = "highchartOption",
+                label = NULL,
+                choices = setNames(c(1:4),c("Total Cases","Recovered cases","Deaths","Active Cases")),
+                selected = "1",
+                shape = c("round"),
+                outline = T,
+                fill = T,
+                width = "100%"
+              )
+            ),
+            status = "primary",
+            size = "sm",
+            circle = T,
+            icon = icon("wrench"),
+            right = T,
+            margin = "10px",
+            inputId = "worldMapOption"
+          ),
+          bsPopover("worldMapOption", title = NULL, content = "Click to specify the outcome", placement = "left", trigger = "hover",
+                    options = NULL)
+        )
+      ),
       highchartOutput("worldMap",width = "100%") %>% withSpinner()
     )
   ),
   tags$hr(),
   argonRow(
-    argonColumn(
-      width = 12,
-      argonTabSet(
-        id = "dashboardTab",
-        card_wrapper = F,
-        horizontal = TRUE,
-        circle = F,
-        size = "sm",
-        width = 12,
-        # analysis setting tab -----
-        argonTab(
-          tabName = "Total cases",
-          active = T,
-          highchartOutput("totalCasesPlot",width = "100%") %>% withSpinner()
-        ),
-        argonTab(
-          tabName = "Cumulative Cases",
-          active = F,
-          highchartOutput("cumulativePlot",width = "100%") %>% withSpinner()
-        ),
-        argonTab(
-          tabName = paste0("Confirmed New Cases (",Sys.Date() - 1,")"),
-          active = F,
-          highchartOutput("newCasesPlot",width = "100%") %>% withSpinner()
-        ),
-        argonTab(
-          tabName = paste0("Deaths (",Sys.Date() - 1,")"),
-          active = F,
-          highchartOutput("newCasesDeathsPlot",width = "100%") %>% withSpinner()
-        ),
-        argonTab(
-          tabName = paste0("Recovered (",Sys.Date() - 1,")"),
-          active = F,
-          highchartOutput("newCasesRecoveredPlot",width = "100%") %>% withSpinner()
-        )
-        
 
-      )
-
-    )
   )
   )
 
@@ -395,21 +482,25 @@ output$chartUI = renderUI({
 
 output$worldMap <- renderHighchart({
   req(!is.null(results$dataframeTotal))
+  canvasClickFunction <- JS("function(event) {Shiny.setInputValue('canvasClicked', [event.point.name]);}")
   x = input$highchartOption %>% as.numeric()
-  y = input$populationSelect %>% tolower()
-  data = results$dataframeTotal %>% 
-         filter(str_detect(tolower(countryName), pattern = paste(y,collapse = "|"))) 
+  data = results$dataframeTotal 
+  # %>% 
+  #        filter(str_detect(tolower(countryName), pattern = paste(y,collapse = "|"))) 
   value = switch(x,"Confirmed","Recovered","Deaths","Unrecovered")
   colnames(data)[5] = "name"
   highchart(type = "map",width = "100%",height = "100%") %>%
     hc_add_series_map(map = worldgeojson, df = data, value = value, joinBy = "name") %>%
-    hc_colorAxis(stops = color_stops()) %>%
-    hc_tooltip(useHTML = TRUE,headerFormat = '',pointFormat = paste0('{point.name}: {point.',value,'} ')) %>%
+    hc_colorAxis(stops = color_stops(5)) %>%
+    hc_tooltip(useHTML = TRUE,
+               headerFormat = '',
+               pointFormat = paste0('{point.name}: {point.',value,'} ')) %>%
     hc_exporting(enabled = TRUE,filename = value) %>% 
     hc_add_theme(hc_theme_ffx()) %>%
     hc_chart(zoomType = "xy") %>%
-    hc_mapNavigation(enabled = TRUE)
-  
+    hc_mapNavigation(enabled = TRUE) %>%
+    hc_plotOptions(series = list( 
+      events = list(click = canvasClickFunction),allowPointSelect = T))
 })
 
 output$cumulativePlot = renderHighchart({
@@ -433,9 +524,13 @@ output$cumulativePlot = renderHighchart({
     hc_add_series(name = "Death", data = df_daily$totalDeaths)
   
   hc %>% 
+    hc_chart(type = "column") %>%
     hc_chart(borderColor = '#EBBA95',
              borderRadius = 10,
              borderWidth = 2
+    ) %>%
+    hc_exporting(
+      enabled = TRUE
     ) %>%
     hc_colors(c(confirmed_color,active_color, recovered_color ,death_color)) %>%
     hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
@@ -446,13 +541,13 @@ output$totalCasesPlot = renderHighchart({
   x = results$dataframeTotal %>%
         select(-countryCode) %>%
         arrange(desc(Confirmed)) %>%
-        .[1:15,]
+        .[1:10,]
   confirmed_color = "#172b4d"
   active_color <- "#1f77b4"
   recovered_color <- "forestgreen"
   death_color <- "red"
   hc <- highchart() %>% 
-    hc_subtitle(text = "Total  Cases (Top 15 countries)",
+    hc_subtitle(text = "Total  Cases (Top 10 countries)",
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$countryName) %>%
@@ -466,6 +561,9 @@ output$totalCasesPlot = renderHighchart({
     hc_chart(borderColor = '#EBBA95',
              borderRadius = 10,
              borderWidth = 2
+    ) %>%
+    hc_exporting(
+      enabled = TRUE
     ) %>%
     hc_colors(c(confirmed_color,active_color, recovered_color ,death_color)) %>%
     hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
@@ -482,9 +580,11 @@ output$newCasesPlot = renderHighchart({
     hc_subtitle(text = "New  Cases (Top 25 countries)",
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
-    hc_xAxis(categories = x$countryName) %>%
+    hc_xAxis(categories = x$countryName,title = list(text = "Countries")) %>%
     hc_yAxis(title = list(text = "New Cases")) %>%
-    hc_add_series(name = "Countries",data = x$ConfirmedNew) 
+    hc_add_series(name = "Cases:",
+                  data = x$ConfirmedNew,
+                  showInLegend = F) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -492,9 +592,11 @@ output$newCasesPlot = renderHighchart({
              borderRadius = 10,
              borderWidth = 2
     ) %>%
+    hc_exporting(
+      enabled = TRUE
+    ) %>%
     hc_colors(c(death_color)) %>%
-    hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
-               shared = TRUE, borderWidth = 5,table = T)
+    hc_tooltip(shared = TRUE, borderWidth = 5,table = F)
 })
 output$newCasesDeathsPlot = renderHighchart({
   x = results$newCases %>%
@@ -508,13 +610,18 @@ output$newCasesDeathsPlot = renderHighchart({
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$countryName) %>%
     hc_yAxis(title = list(text = "New Deaths")) %>%
-    hc_add_series(name = "Countries",data = x$DeathsNew) 
+    hc_add_series(name = "Cases:",
+                  data = x$DeathsNew,
+                  showInLegend = F) 
   
   hc %>% 
     hc_chart(type = "column") %>%
     hc_chart(borderColor = '#EBBA95',
              borderRadius = 10,
              borderWidth = 2
+    ) %>%
+    hc_exporting(
+      enabled = TRUE
     ) %>%
     hc_colors(c(death_color)) %>%
     hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
@@ -532,7 +639,9 @@ output$newCasesRecoveredPlot = renderHighchart({
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$countryName) %>%
     hc_yAxis(title = list(text = "New Recovered")) %>%
-    hc_add_series(name = "Countries",data = x$RecoveredNew) 
+    hc_add_series(name = "Cases:",
+                  data = x$RecoveredNew,
+                  showInLegend = F) 
   
   hc %>% 
     hc_chart(type = "column") %>%
@@ -602,278 +711,199 @@ output$dataTableCountryWise = renderDataTable({
 
 #### Country Specific tab
 
-output$countrySpecificCards = renderUI({
+countrySpecificModal <- function(){
+  countryName = input$canvasClicked
+  x = results$dataframeTotal %>% 
+          filter(countryName == input$canvasClicked)
+  totalConfirmed = x$Confirmed
+  totalConfirmedYesterday = results$dataframeOldCases %>%
+                                filter(countryName == input$canvasClicked) %>%
+                                .["Confirmed"]
+  totalUnrecovered = x$Unrecovered
+  activeCasesPer = round(((totalUnrecovered/totalConfirmed)*100),1)
+  yesterdayActiveCountry = results$dataframeOldCases %>%
+                                filter(countryName == input$canvasClicked) %>%
+                                .["Unrecovered"]
+  totalRecovered = x$Recovered
+  totalRecoveredPer = round(((totalRecovered/totalConfirmed)*100),1)
+  yesterdayRecoveredCountry = results$dataframeOldCases %>%
+                                  filter(countryName == input$canvasClicked) %>%
+                                  .["Recovered"]
+  totalDeath = x$Deaths
+  totalDeathPer = round(((totalDeath/totalConfirmed)*100),1)
+  yesterdayDeathsCountry = results$dataframeOldCases %>%
+                              filter(countryName == input$canvasClicked) %>%
+                              .["Deaths"]
+  modalDialog(
   tagList(
     argonRow(
       argonColumn(
+        center = T,
         width = 12,
-        div(
-          class = "inlineSubInput",
-          pickerInput(
-            "countrySelect",
-            label = strong("Showing results from "),
-            choices = results$dataframeTotal$countryName,
-            options = list(
-              `live-search` = TRUE
-            ),
-            multiple = F,
-            selected = "China",
-            width = "100%",
-            inline = T
-          )
-        )
-       )
+        h1(countryName)
+      )
+    ),
+    argonRow(
+      argonColumn(
+        width = 3,
+        argonBadge(text = paste0("Confirmed: ",prettyNum(totalConfirmed,big.mark = ",")), 
+                   src = NULL, 
+                   pill = T, 
+                   status = "warning"),
+          h6(paste0("Yesterday: ",
+                    prettyNum(totalConfirmedYesterday,
+                              big.mark = ",")
+          ),
+          style = 'text-align:center;
+          font-size:15px;')
       ),
-    tags$br(),
+      argonColumn(
+        width = 3,
+        argonBadge(text = paste0("Active: ",prettyNum(totalUnrecovered,big.mark = ",")
+                                 # " (",activeCasesPer,"%)"
+                                 ), 
+                   src = NULL, 
+                   pill = T, 
+                   status = "info"),
+        h6(paste0("Yesterday: ",
+                  prettyNum(yesterdayActiveCountry,
+                            big.mark = ",")
+        ),
+        style = 'text-align:center;
+        font-size:15px;')
+        ),
+      argonColumn(
+        width = 3,
+        argonBadge(text = paste0("Recovered: ",prettyNum(totalRecovered,big.mark = ",")
+                                 # " (",totalRecoveredPer,"%)"
+                                 ), 
+                   src = NULL, 
+                   pill = T, 
+                   status = "success"),
+        h6(paste0("Yesterday: ",
+                  prettyNum(yesterdayRecoveredCountry,
+                            big.mark = ",")
+        ),
+        style = 'text-align:center;
+        font-size:15px;')
+        ),
+      argonColumn(
+        width = 3,
+        argonBadge(text = paste0("Deaths: ",prettyNum(totalDeath,big.mark = ",")
+                                 # " (",totalRecoveredPer,"%)"
+        ), 
+        src = NULL, 
+        pill = T, 
+        status = "danger"),
+        h6(paste0("Yesterday: ",
+                  prettyNum(yesterdayDeathsCountry,
+                            big.mark = ",")
+        ),
+        style = 'text-align:center;
+        font-size:15px;')
+        )
+    ),
+    tags$hr(),
+    argonRow(
+    argonColumn(
+      width = 12,
       argonRow(
         argonColumn(
-          width = 3,
-          argonInfoCard(
-            value = countupOutput("confirmedCountCountry"),
-            icon = icon("users"),
-            icon_background = "default",
-            hover_lift = F,
-            shadow = T,
-            background_color = "warning",
-            gradient = T,
-            width = 12
-          ),
-          argonRow(
-            center = T,
-            uiOutput("yesterdayConfirmedCountry")
-           )
-          ),
+          width = 5,
+          # tags$strong("Country specific plots"),
+          dateRangeInput( inputId = "dateRange", 
+                         label = NULL,
+                         start = min(coronavirus$date),
+                         end   = Sys.Date() - 1,
+                         min = min(coronavirus$date),
+                         max   = Sys.Date() - 1,
+                         format = "dd-mm-yyyy",
+                         width = "100%"
+                         )
+        ),
         argonColumn(
-          width = 3,
-          argonInfoCard(
-            value = countupOutput("activeCountCountry"),
-            icon = icon("hospital"),
-            icon_background = "default",
-            hover_lift = F,
-            shadow = T,
-            background_color = "info",
-            gradient = T,
-            width = 12
-          ),
-          argonRow(
-            center = T,
-            uiOutput("yesterdayActiveCountry")
-          )
-          # h6(paste0("Yesterday: ",
-          #           prettyNum(results$dataframeTotalOldCases$totalUnrecovered,big.mark = ",")
-          # ), 
-          # style = 'text-align:center;
-          # font-size:15px;')
-          ),
+          width = 4,
+          prettySwitch(inputId = "scaleCountry",
+                       label = "Logarithmic Scale",
+                       value = F,
+                       status = "primary",
+                       fill = T,
+                       inline = T,
+                       width = "100%"
+                       )
+        ),
         argonColumn(
-          width = 3,
-          argonInfoCard(
-            value = countupOutput("recoveredCountCountry"),
-            icon = icon("smile"),
-            icon_background = "default",
-            hover_lift = F,
-            shadow = T,
-            background_color = "success",
-            gradient = T,
-            width = 12
+          width = 1,
+          offset = 1,
+          dropdownButton(
+            tagList(
+              prettyRadioButtons(
+                inputId = "countryPlotOptions",
+                label = NULL,
+                choices = setNames(c(1:4),c("Cumulative Cases",
+                                            paste0("Confirmed New Cases (",Sys.Date() - 1,")"),
+                                            paste0("Deaths (",Sys.Date() - 1,")"),
+                                            paste0("Recovered (",Sys.Date() - 1,")")
+                )
+                ),
+                selected = "1",
+                shape = c("round"),
+                outline = T,
+                fill = T,
+                width = "100%"
+              )
+            ),
+            status = "primary",
+            size = "sm",
+            circle = T,
+            icon = icon("wrench"),
+            right = T,
+            margin = "10px",
+            inputId = "countryPlotOptionsDropdown"
           ),
-          argonRow(
-            center = T,
-            uiOutput("yesterdayRecoveredCountry")
-          )
-          ),
-        argonColumn(
-          width = 3,
-          argonInfoCard(
-            value = countupOutput("deathCountCountry"),
-            icon = icon("heartbeat"),
-            icon_background = "default",
-            hover_lift = F,
-            shadow = T,
-            background_color = "danger",
-            gradient = T,
-            width = 12
-          ),
-          argonRow(
-            center = T,
-            uiOutput("yesterdayDeathsCountry")
-          )
-          )
+          bsPopover("countryPlotOptionsDropdown", title = NULL, content = "Click to specify the type of plot", placement = "left", trigger = "hover",
+                    options = NULL)
         )
-      )
-})
-
-output$yesterdayConfirmedCountry = renderUI({
-  req(!is.null(input$countrySelect) )
-  h6(paste0("Yesterday: ",
-            prettyNum(results$dataframeOldCases %>%
-                             filter(countryName == input$countrySelect) %>%
-                             .["Confirmed"],
-                      big.mark = ",")
-  ),
-  style = 'text-align:center;
-  font-size:15px;')
-})
-
-output$yesterdayActiveCountry = renderUI({
-  req(!is.null(input$countrySelect) )
-  h6(paste0("Yesterday: ",
-            prettyNum(results$dataframeOldCases %>%
-                        filter(countryName == input$countrySelect) %>%
-                        .["Unrecovered"],
-                      big.mark = ",")
-  ),
-  style = 'text-align:center;
-  font-size:15px;')
-})
-output$yesterdayRecoveredCountry = renderUI({
-  req(!is.null(input$countrySelect) )
-  h6(paste0("Yesterday: ",
-            prettyNum(results$dataframeOldCases %>%
-                        filter(countryName == input$countrySelect) %>%
-                        .["Recovered"],
-                      big.mark = ",")
-  ),
-  style = 'text-align:center;
-  font-size:15px;')
-})
-
-output$yesterdayDeathsCountry = renderUI({
-  req(!is.null(input$countrySelect) )
-  h6(paste0("Yesterday: ",
-            prettyNum(results$dataframeOldCases %>%
-                        filter(countryName == input$countrySelect) %>%
-                        .["Deaths"],
-                      big.mark = ",")
-  ),
-  style = 'text-align:center;
-  font-size:15px;')
-})
-
-output$confirmedCountCountry <- renderCountup({
-  x = results$dataframeTotal %>% 
-        filter(countryName == input$countrySelect)
-  totalConfirmed = x$Confirmed
-  opts <- list(useEasing = TRUE,
-               useGrouping = TRUE,
-               prefix = "Confirmed ")
-  countup(
-    totalConfirmed,
-    start_at = 0,
-    options = opts,
-    duration = 2,
-    start = TRUE,
-    width = "100%",
-    height = NULL,
-    elementId = NULL
-  )
-})
-output$activeCountCountry <- renderCountup({
-  x = results$dataframeTotal %>% 
-        filter(countryName == input$countrySelect)
-  totalUnrecovered = x$Unrecovered
-  totalConfirmed = x$Confirmed
-  activeCasesPer = round(((totalUnrecovered/totalConfirmed)*100),1)
-  opts <- list(useEasing = TRUE,
-               useGrouping = TRUE,
-               prefix = "Active ",
-               suffix = paste0(" (",activeCasesPer,"%)")
-  )
-  countup(
-    totalUnrecovered,
-    start_at = 0,
-    options = opts,
-    duration = 2,
-    start = TRUE,
-    width = "100%",
-    height = NULL,
-    elementId = NULL
-  )
-})
-output$recoveredCountCountry <- renderCountup({
-  x = results$dataframeTotal %>% 
-          filter(countryName == input$countrySelect)
-  totalRecovered = x$Recovered
-  totalConfirmed = x$Confirmed
-  totalRecoveredPer = round(((totalRecovered/totalConfirmed)*100),1)
-  opts <- list(useEasing = TRUE,
-               useGrouping = TRUE,
-               prefix = "Recovered ",
-               suffix = paste0(" (",totalRecoveredPer,"%)")
-  )
-  countup(
-    totalRecovered,
-    start_at = 0,
-    options = opts,
-    duration = 2,
-    start = TRUE,
-    width = "100%",
-    height = NULL,
-    elementId = NULL
-  )
-})
-output$deathCountCountry <- renderCountup({
-  x = results$dataframeTotal %>% 
-         filter(countryName == input$countrySelect)
-  totalDeath = x$Deaths
-  totalConfirmed = x$Confirmed
-  totalDeathPer = round(((totalDeath/totalConfirmed)*100),1)
-  opts <- list(useEasing = TRUE,
-               useGrouping = TRUE,
-               prefix = "Deaths ",
-               suffix = paste0(" (",totalDeathPer,"%)"))
-  countup(
-    totalDeath,
-    start_at = 0,
-    options = opts,
-    duration = 2,
-    start = TRUE,
-    width = "100%",
-    height = NULL,
-    elementId = NULL
-  )
-})
-
-output$countrySpecificChartsUI = renderUI({
-  tagList(
-    argonRow(
-      argonColumn(
-        width = 12,
-        argonTabSet(
-          id = "dashboardCountryTab",
-          card_wrapper = F,
-          horizontal = TRUE,
-          circle = F,
-          size = "sm",
+      ),
+      argonRow(
+        argonColumn(
           width = 12,
-          argonTab(
-            tabName = "Cumulative Cases",
-            active = T,
+          div(
+            id = "cumulativeCountryPlotDiv",
             highchartOutput("cumulativeCountryPlot",width = "100%") %>% withSpinner()
           ),
-          argonTab(
-            tabName = paste0("Confirmed New Cases (",Sys.Date() - 1,")"),
-            active = F,
+          hidden(
+            div(
+            id = "newCasesCountryPlotDiv",
             highchartOutput("newCasesCountryPlot",width = "100%") %>% withSpinner()
+           )
           ),
-          argonTab(
-            tabName = paste0("Deaths (",Sys.Date() - 1,")"),
-            active = F,
+          hidden(
+            div(
+            id = "newCasesDeathsCountryPlotDiv",
             highchartOutput("newCasesDeathCountryPlot",width = "100%") %>% withSpinner()
+          )
           ),
-          argonTab(
-            tabName = paste0("Recovered (",Sys.Date() - 1,")"),
-            active = F,
+          hidden(
+            div(
+            id = "newCasesRecoveredCountryPlotDiv",
             highchartOutput("newCasesRecoveredCountryPlot",width = "100%") %>% withSpinner()
           )
-          
+          )
         )
-        
       )
+     )
     )
-  )
-  
-})
+  ),
+  title = NULL,
+  size = "l", 
+  align = "center",
+  easyClose = TRUE,
+  fade = T, 
+  footer = NULL
+)
+}
+
 
 output$cumulativeCountryPlot = renderHighchart({
   confirmed_color = "#172b4d"
@@ -881,7 +911,7 @@ output$cumulativeCountryPlot = renderHighchart({
   recovered_color <- "forestgreen"
   death_color <- "red"
   df_daily <- coronavirus %>% 
-                filter(countryName == input$countrySelect) %>%
+                filter(countryName == input$canvasClicked) %>%
                 dplyr::group_by(date) %>%
                 dplyr::summarise(totalConfirmed = sum(Confirmed, na.rm = TRUE),
                                  totalRecovered = sum(Recovered,na.rm = TRUE),
@@ -889,13 +919,15 @@ output$cumulativeCountryPlot = renderHighchart({
                 ) %>%
                 dplyr::arrange(date) %>%
                 dplyr::ungroup() %>%
-                dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) 
+                dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) %>%
+                filter(date >= input$dateRange[1] & date <= input$dateRange[2])
+  scale = ifelse(input$scaleCountry,"logarithmic","linear")
   hc <- highchart() %>% 
     hc_subtitle(text = paste0("Cumulative Cases in ",input$countrySelect),
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = df_daily$date) %>%
-    hc_yAxis(title = list(text = "Cumulative Number of Cases")) %>%
+    hc_yAxis(title = list(text = "Cumulative Number of Cases"),type = scale) %>%
     hc_add_series(name = "Confirmed",data = df_daily$totalConfirmed) %>% 
     hc_add_series(name = "Active",data = df_daily$totalUnrecovered) %>% 
     hc_add_series(name = "Recovered", data = df_daily$totalRecovered) %>% 
@@ -914,13 +946,15 @@ output$cumulativeCountryPlot = renderHighchart({
 output$newCasesCountryPlot = renderHighchart({
   newCases = results$dataframeFinal %>% 
               select(date,countryName,Confirmed) %>%
-              dplyr::filter(countryName == input$countrySelect) %>%
+              dplyr::filter(countryName == input$canvasClicked) %>%
               mutate(confirmedDaily = if_else(is.na(Confirmed - shift(Confirmed,1)),
                                       Confirmed,
                                       Confirmed - shift(Confirmed,1)
                                       )
                      
-                     ) 
+                     ) %>% 
+              filter(date >= input$dateRange[1] & date <= input$dateRange[2])
+  scale = ifelse(input$scaleCountry,"logarithmic","linear") 
   x = newCases
   death_color <- "orange"
   hc <- highchart() %>% 
@@ -928,7 +962,7 @@ output$newCasesCountryPlot = renderHighchart({
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$date) %>%
-    hc_yAxis(title = list(text = "New Cases")) %>%
+    hc_yAxis(title = list(text = "New Cases"),type = scale) %>%
     hc_add_series(name = "Countries",data = x$confirmedDaily) 
   
   hc %>% 
@@ -945,13 +979,15 @@ output$newCasesCountryPlot = renderHighchart({
 output$newCasesDeathCountryPlot = renderHighchart({
   newCases = results$dataframeFinal %>% 
                 select(date,countryName,Deaths) %>%
-                dplyr::filter(countryName == input$countrySelect) %>%
+                dplyr::filter(countryName == input$canvasClicked) %>%
                 mutate(deathDaily = if_else(is.na(Deaths - shift(Deaths,1)),
                                             Deaths,
                                             Deaths - shift(Deaths,1)
                 )
                 
-                )
+                ) %>% 
+                filter(date >= input$dateRange[1] & date <= input$dateRange[2])
+  scale = ifelse(input$scaleCountry,"logarithmic","linear")
   x = newCases
   death_color <- "red"
   hc <- highchart() %>% 
@@ -959,7 +995,7 @@ output$newCasesDeathCountryPlot = renderHighchart({
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$date) %>%
-    hc_yAxis(title = list(text = "Deaths")) %>%
+    hc_yAxis(title = list(text = "Deaths"), type = scale) %>%
     hc_add_series(name = "Countries",data = x$deathDaily) 
   
   hc %>% 
@@ -976,13 +1012,15 @@ output$newCasesDeathCountryPlot = renderHighchart({
 output$newCasesRecoveredCountryPlot = renderHighchart({
   newCases = results$dataframeFinal %>% 
                 select(date,countryName,Recovered) %>%
-                dplyr::filter(countryName == input$countrySelect) %>%
+                dplyr::filter(countryName == input$canvasClicked) %>%
                 mutate(recoveredDaily = if_else(is.na(Recovered - shift(Recovered,1)),
                                             Recovered,
                                             Recovered - shift(Recovered,1)
                 )
                 
-                )
+                ) %>% 
+                filter(date >= input$dateRange[1] & date <= input$dateRange[2])
+  scale = ifelse(input$scaleCountry,"logarithmic","linear")
   x = newCases
   death_color <- "green"
   hc <- highchart() %>% 
@@ -990,7 +1028,7 @@ output$newCasesRecoveredCountryPlot = renderHighchart({
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = x$date) %>%
-    hc_yAxis(title = list(text = "Recovered")) %>%
+    hc_yAxis(title = list(text = "Recovered"),type = scale) %>%
     hc_add_series(name = "Countries",data = x$recoveredDaily) 
   
   hc %>% 
@@ -1004,6 +1042,390 @@ output$newCasesRecoveredCountryPlot = renderHighchart({
                shared = TRUE, borderWidth = 5,table = T)
 })
 
+#### Country Comparision tab ----
+
+output$countryComparisionChartsUI = renderUI({
+  tagList(
+    argonRow(
+      argonColumn(
+        width = 12,
+        selectInput(
+          inputId = "countryCompareList",
+          label = strong("Select all the countries you want to compare in graphs"),
+          choices = results$dataframeTotal$countryName,
+          selected = results$dataframeTotal$countryName[c(1:5)],
+          selectize = T,
+          multiple = T,
+          width = "100%"
+        )
+      ),
+      argonColumn(
+        width = 3,
+        dropdownButton(
+          prettyRadioButtons(
+            inputId = "countryCompareTypeofPlot",
+            label = NULL,
+            choices = setNames(c(1:5),c("Cumulative",
+                                        "Confirmed cases",
+                                        "Active cases",
+                                        "Recovered cases",
+                                        "Deaths")),
+            selected = "1",
+            shape = c("round"),
+            outline = T,
+            fill = T,
+            width = "100%"
+          ),
+          label = "Outcome to be compared:",
+          status = "primary",
+          circle = F,
+          icon = icon("wrench"),
+          right = T,
+          margin = "10px",
+          inputId = "countryCompareTypeofPlotDropdown"
+        )
+      ),
+      argonColumn(
+        width = 4,
+        dateRangeInput( inputId = "dateRangeCompare", 
+                        label = NULL,
+                        start = min(coronavirus$date),
+                        end   = Sys.Date() - 1,
+                        min = min(coronavirus$date),
+                        max   = Sys.Date() - 1,
+                        format = "dd-mm-yyyy",
+                        width = "100%"
+        )
+      ),
+      argonColumn(
+        width = 2,
+        offset = 3,
+        prettySwitch(inputId = "scaleCountryCompare",
+                     label = "Logarithmic Scale",
+                     value = F,
+                     status = "primary",
+                     fill = T,
+                     inline = T,
+                     width = "100%"
+        )
+      )
+    ),
+    tags$hr(),
+    argonRow(
+      argonColumn(
+        width = 12,
+        highchartOutput("countryCompareChart") %>% withSpinner()
+      )
+    )
+  )
+})
+
+output$countryCompareChart = renderHighchart({
+  req(!is.null(input$countryCompareList))
+  countryList = input$countryCompareList
+  scale = ifelse(input$scaleCountryCompare,"logarithmic","linear")
+  dateRange = input$dateRangeCompare
+  plotType = switch(as.numeric(input$countryCompareTypeofPlot),
+                    "Cumulative",
+                    "Confirmed",
+                    "Active",
+                    "Recovered",
+                    "Deaths")
+  if (plotType != "Cumulative") {
+      data =  coronavirus %>%
+                    filter(countryName %in% countryList) %>%
+                    filter(date >= dateRange[1] & date <= dateRange[2]) %>%
+                    mutate(Active = Confirmed - Recovered - Deaths) %>%
+                    select(date,countryName,plotType)
+      hc <- highchart() %>% 
+              hc_subtitle(text = paste0("Comparing ",plotType," cases for ",length(countryList)," countries"),
+                          align = "left",
+                          style = list(color = "#2b908f", fontWeight = "bold")) %>%
+              hc_xAxis(categories = data$date) %>%
+              hc_yAxis(title = list(text = paste0(plotType," cases")),
+                       type = scale)
+      for (i in 1:length(countryList)) {
+        hc = hc_add_series(hc,
+                      name = countryList[i],
+                      data = data %>%
+                              filter(countryName == countryList[i]) %>%
+                              .[,3]
+                        )
+            }
+      hc %>% 
+        hc_chart(borderColor = '#EBBA95',
+                 borderRadius = 10,
+                 borderWidth = 2
+        ) %>%
+        hc_exporting(
+          enabled = TRUE
+        ) %>%
+        hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
+                   shared = TRUE, borderWidth = 5,table = T)
+  } else {
+      data = results$dataframeTotal %>%
+                  filter(countryName %in% countryList)
+      confirmed_color = "#172b4d"
+      active_color <- "#1f77b4"
+      recovered_color <- "forestgreen"
+      death_color <- "red"
+      hc <- highchart() %>% 
+        hc_subtitle(text = paste0("Comparing ",length(countryList)," countries"),
+                    align = "left",
+                    style = list(color = "#2b908f", fontWeight = "bold")) %>%
+        hc_xAxis(categories = data$countryName) %>%
+        hc_yAxis(title = list(text = "Total Cases"),type = scale) %>%
+        hc_add_series(name = "Confirmed",data = data$Confirmed) %>% 
+        hc_add_series(name = "Active",data = data$Unrecovered) %>% 
+        hc_add_series(name = "Recovered", data = data$Recovered) %>% 
+        hc_add_series(name = "Death", data = data$Deaths)
+      hc %>% 
+        hc_chart(type = "column") %>%
+        hc_chart(borderColor = '#EBBA95',
+                 borderRadius = 10,
+                 borderWidth = 2
+        ) %>%
+        hc_exporting(
+          enabled = TRUE
+        ) %>%
+        hc_colors(c(confirmed_color,active_color, recovered_color ,death_color)) %>%
+        hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
+                   shared = TRUE, borderWidth = 5,table = T)
+  }
+  
+})
+
+output$dataTableCountryCompare = renderDataTable({
+  req(!is.null(input$countryCompareList))
+  countryList = input$countryCompareList
+  x = results$dataframeTotal %>%
+        filter(countryName %in% countryList) %>%
+        select(-countryCode) %>%
+        arrange(desc(Confirmed)) %>%
+        mutate(totalActivePer = Unrecovered/Confirmed) %>%
+        mutate(totalRecoveredPer = Recovered/Confirmed) %>%
+        mutate(totalDeathPer = Deaths/Confirmed) %>%
+        select(Country = countryName, Confirmed = Confirmed, Active = Unrecovered,Recovered = Recovered,Deaths = Deaths,"Active (%)" = totalActivePer,"Recovered (%)" = totalRecoveredPer,"Deaths (%)" = totalDeathPer)
+  datatable(x,
+            extensions = 'Buttons',
+            rownames = FALSE,
+            filter = 'top',
+            options = list(
+              searchHighlight = TRUE,
+              pageLength = 25,
+              scrollX = TRUE,
+              dom = 'Bfrtip',
+              buttons =
+                list(
+                  list(
+                    extend = 'collection',
+                    buttons = c('csv', 'pdf'),
+                    text = 'Download'
+                  )
+                )
+              
+            )
+            
+  ) %>%
+    formatPercentage('Active (%)',2) %>%
+    formatPercentage('Recovered (%)',2) %>%
+    formatPercentage('Deaths (%)',2) %>%
+    formatStyle(
+      'Active (%)',
+      background = styleColorBar(x$'Active (%)', '#31bed4'),
+      backgroundSize = '100% 90%',
+      backgroundRepeat = 'no-repeat',
+      backgroundPosition = 'center'
+    ) %>%
+    formatStyle(
+      'Recovered (%)',
+      background = styleColorBar(x$'Recovered (%)', '#8bd431'),
+      backgroundSize = '100% 90%',
+      backgroundRepeat = 'no-repeat',
+      backgroundPosition = 'center'
+    ) %>%
+    formatStyle(
+      'Deaths (%)',
+      background = styleColorBar(x$'Deaths (%)', '#ff5757'),
+      backgroundSize = '100% 90%',
+      backgroundRepeat = 'no-repeat',
+      backgroundPosition = 'center'
+    )
+})
+
+#### Forecast UI ----
+
+output$forecastUI = renderUI({
+  tagList(
+    h3("Prediction of nCov-19 cases using Infectious Disease Modelling"),
+    tags$br(),
+    argonRow(
+      argonColumn(
+        width = 3,
+        pickerInput(
+          inputId = "countryForecastInput",
+          label = strong("Select country:"),
+          choices = results$dataframeTotal$countryName,
+          selected = "India",
+          width = "100%",
+          options = list(`live-search` = TRUE),
+          inline = F
+        )
+      ),
+      argonColumn(
+        width = 2,
+        numericInput(
+          inputId = "populationInput",
+          label = strong("Population (N)"),
+          value = 1380004385,
+          min = 0,
+          width = "100%"
+        )
+      ),
+      argonColumn(
+        width = 2,
+        numericInput(
+          inputId = "fatalityInput",
+          label = strong("Fatality rate (in %)"),
+          value = 0.7,
+          min = 0,
+          width = "100%"
+        )
+      ),
+      argonColumn(
+        width = 3,
+        numericInput(
+          inputId = "severeInput",
+          label = strong("Severe cases (in %): Assumption"),
+          value = 5,
+          min = 0,
+          width = "100%"
+        )
+      ),
+      argonColumn(
+        width = 2,
+        dateInput( inputId = "dateForecast", 
+                        label = strong("Forecast till which date:"),
+                        value = Sys.Date() + 120,
+                        min = Sys.Date(),
+                        format = "dd-mm-yyyy",
+                        width = "100%"
+        )
+      )
+    ),
+    tags$hr(),
+    argonRow(
+      argonColumn(
+        width = 5,
+        highchartOutput("currentScenario") %>% withSpinner()
+      ),
+      argonColumn(
+        width = 7,
+        highchartOutput("forecastedScenario") %>% withSpinner()
+      )
+      
+    )
+  )
+})
+
+observeEvent(input$countryForecastInput,{
+  value = population %>%
+            filter(Country == input$countryForecastInput) %>%
+            .[,2] %>%
+            gsub(",", "",.) %>%
+            as.numeric()
+  updateNumericInput(session,
+                     inputId = "populationInput",
+                     value = value)
+})
+
+output$currentScenario = renderHighchart({
+  req(!is.null(coronavirus))
+  data = coronavirus %>% 
+            filter(countryName == input$countryForecastInput) %>%
+            filter(Confirmed > 0) %>%
+            select(date,Confirmed,Recovered)
+  day = 1:(nrow(data))
+  lmModel <- augment( lm(log10(data$Confirmed) ~ day, data = data))
+  hc <- highchart() %>% 
+           hc_subtitle(text = paste0("Cumulative Infected Cases in ",input$countryForecastInput),
+                       align = "left",
+                       style = list(color = "#2b908f", fontWeight = "bold")) %>%
+    hc_xAxis(categories = data$date) %>%
+    hc_yAxis(title = list(text = "Infected Cases (Log-scale)"),type = "logarithmic") %>%
+    hc_add_series(name = "Actual",data = data$Confirmed,type = "scatter") %>% 
+    hc_add_series(name = "Fitted",data = 10^lmModel$.fitted,type = "line")
+  
+  hc %>% 
+    hc_chart(borderColor = '#EBBA95',
+             borderRadius = 10,
+             borderWidth = 2
+    ) %>%
+    hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
+               shared = TRUE, borderWidth = 5,table = T)
+  
+})
+
+output$forecastedScenario = renderHighchart({
+  req(!is.null(coronavirus))
+  active_color <- "#1f77b4"
+  recovered_color <- "forestgreen"
+  death_color <- "red"
+  orange_color <- "orange"
+  data = coronavirus %>% 
+          filter(countryName == input$countryForecastInput) %>%
+          filter(Confirmed > 0) %>%
+          select(date,Confirmed,Recovered)
+  I = data$Confirmed[1]
+  R = data$Recovered[1]
+  N = input$populationInput
+  SIR <- function(time, state, parameters) {
+    par <- as.list(c(state, parameters))
+    with(par, {
+      dS <- -beta/N * I * S
+      dI <- beta/N * I * S - gamma * I
+      dR <- gamma * I
+      list(c(dS, dI, dR))
+    })
+  }
+  init <- c(S = N - I, I = I, R = R)
+  RSS <- function(parameters) {
+    names(parameters) <- c("beta", "gamma")
+    out <- ode(y = init, times = Day, func = SIR, parms = parameters)
+    fit <- out[ , 3]
+    sum((Infected - fit)^2)
+  }
+  model = optim(c(0.5, 0.5), RSS, method = "L-BFGS-B", lower = c(0, 0), upper = c(1, 1),hessian = F)
+  modelPar <- setNames(model$par, c("beta", "gamma"))
+  t = 1:(input$dateForecast - as.Date(min(data$date)))
+  fitValue <- data.frame(ode(y = init, times = t, func = SIR, parms = modelPar))
+  results$modelFit = fitValue
+  fitValue = fitValue %>%
+                mutate(date = as.Date(min(data$date)) + time)
+  hc <- highchart() %>% 
+    hc_subtitle(text = paste0("Predicted Infected Cases in ",input$countryForecastInput," by ",input$dateForecast),
+                align = "left",
+                style = list(color = "#2b908f", fontWeight = "bold")) %>%
+    hc_xAxis(categories = fitValue$date) %>%
+    hc_yAxis(title = list(text = "Predicted Cases (Log-scale)"),type = "logarithmic") %>%
+    hc_add_series(name = "Susceptible",data = round(fitValue$S,0)) %>% 
+    hc_add_series(name = "Infected",data = round(fitValue$I,0)) %>%
+    hc_add_series(name = "Recovered",data = round(fitValue$R,0)) %>%
+    hc_add_series(name = "Actual infected",data = data$Confirmed)
+  
+  hc %>% 
+    hc_chart(borderColor = '#EBBA95',
+             borderRadius = 10,
+             borderWidth = 2
+    ) %>%
+    hc_exporting(
+      enabled = TRUE
+    ) %>%
+    hc_colors(c(active_color,death_color,recovered_color,orange_color)) %>%
+    hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
+               shared = TRUE, borderWidth = 5,table = T)
+  
+})
 #### Sentiment analysis ----
 
 sentimentAnalResult = reactiveValues(
@@ -1197,3 +1619,37 @@ output$sentimentPlot = renderHighchart({
 # 
 # [1] "Cruise Ship"
 # [2] "Holy See
+
+observeEvent(input$aggregatePlotOptions,{
+  x = as.numeric(input$aggregatePlotOptions)
+  divlist = c("totalCasesPlotDiv","cumulativePlotDiv","newCasesPlotDiv","newCasesDeathsPlotDiv","newCasesRecoveredPlotDiv")
+  hideAllBut(divlist,x)
+})
+observeEvent(input$countryPlotOptions,{
+  x = as.numeric(input$countryPlotOptions)
+  divlist = c("cumulativeCountryPlotDiv","newCasesCountryPlotDiv",
+              "newCasesDeathsCountryPlotDiv","newCasesRecoveredCountryPlotDiv")
+  hideAllBut(divlist,x)
+})
+
+
+observeEvent(input$canvasClicked,{
+  showModal(countrySpecificModal())
+})
+
+
+
+
+
+
+##### debug server logic #####
+output$runRCodeOutput = renderPrint({
+  req(rcode())
+  isolate({
+    eval(parse(text = rcode()$text))
+  })
+})
+rcode = reactiveVal()
+observeEvent(input$runRCodeButton, {
+  rcode(list("text" = input$runRCode, "type" = "runRCode", "rand" = runif(1)))
+}, ignoreNULL = TRUE, ignoreInit = TRUE)

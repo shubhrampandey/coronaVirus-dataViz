@@ -198,23 +198,28 @@ CSS =
       text-align: justify;
       font-size:14px;
       }
-      .refLabel {
-      height: 20px;
-      }
-      
-      .refButton {
-      font-size: 9px;
-      }
-      
-      .handsontableEditor.autocompleteEditor, .handsontableEditor.autocompleteEditor .ht_master .wtHolder {
-      min-height: 60px;
-      }
-      
-      .invalidInput {
-      background: red;
-      }
       .navbar-vertical {
       box-shadow: 0 0 2rem 0 rgba(0,0,0,.15)!important;
+      }
+      .pretty {
+      margin-top: 1em;
+      }
+      .btn.btn-circle-sm {
+          width: 50px;
+          height: 30px;
+          text-align: center;
+          padding: 2px 0;
+          font-size: 15px;
+          line-height: 50%;
+          margin-top: 0.05em;
+          border-radius: 30px;
+      }
+      .input-group .form-control:not(:first-child) {
+          padding-left: 0;
+          border-left: 0;
+          border-left-width: 2px;
+          border-left-style: initial;
+          border-left-color: initial;
       }
       
       .nav-pills .nav-link.active, .nav-pills .show>.nav-link  {
