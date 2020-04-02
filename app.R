@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v1.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-04-01"
+lastUpdate = "2020-04-02"
 
 loader <- tagList(
   waiter::spin_loaders(42),
