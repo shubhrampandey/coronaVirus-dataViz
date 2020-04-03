@@ -1,7 +1,7 @@
 ##### Global: options #####
-Production = T  
+Production = T 
 options(scipen = 1000, expressions = 10000)
-appVersion = "v1.0"
+appVersion = "v2.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
 lastUpdate = "2020-04-03"
@@ -61,7 +61,7 @@ ui <- tagList( # dependencies
             argonColumn(
               width = 12,
               center = T,
-              h5(HTML("Creator and maintainer: <a href='www.shubhrampandey.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:15px;')
+              h5(HTML("Creator and maintainer: <a href='https://www.shubhrampandey.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:15px;')
             ),
             argonColumn(
               width = 12,
@@ -117,6 +117,36 @@ ui <- tagList( # dependencies
           ),
           top = 50,
           right = 10
+          
+        ),
+        fixedPanel(
+          div(
+            actionBttn("kofi",
+                       style = "material-circle",
+                       icon = icon("coffee"),
+                       size = "s",
+                       color = "success"),
+            bsPopover("kofi", title = NULL, content = "Buy me a coffee", placement = "left", trigger = "hover",
+                      options = NULL),
+            onclick = "window.open('https://ko-fi.com/shubhrampandey', '_blank')"
+          ),
+          top = 50,
+          right = 50
+          
+        ),
+        fixedPanel(
+          div(
+            actionBttn("userGuide",
+                       style = "material-circle",
+                       icon = icon("info"),
+                       size = "s",
+                       color = "royal"),
+            bsPopover("userGuide", title = NULL, content = "Go to app help page", placement = "left", trigger = "hover",
+                      options = NULL),
+            onclick = "window.open('https://sites.google.com/view/covid-19-userguide/home', '_blank')"
+          ),
+          top = 50,
+          right = 90
           
         )
                     )
