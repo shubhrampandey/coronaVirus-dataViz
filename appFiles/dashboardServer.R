@@ -7,10 +7,9 @@ results = reactiveValues(
   dataframeFinal = NULL,
   newCasesRecovered = NULL,
   dataframeOldCases = NULL,
-  modelFit = NULL
+  modelFit = NULL,
+  resultTable = NULL
 )
-
-
 output$dashboard = renderUI({
   argonTabSet(
     id = "analysisSettingsTabs",
@@ -21,7 +20,7 @@ output$dashboard = renderUI({
     width = 12,
     iconList = list(
       icon("tachometer-alt"), 
-      icon("not-equal"), 
+      icon("laptop-code"), 
       icon("chart-line"),
       icon("twitter")
     ),
@@ -32,9 +31,9 @@ output$dashboard = renderUI({
       tags$head(tags$style(type = "text/css", "
              #loadmessage {
                            position: fixed;
-                           top: 0px;
-                           left: 0px;
-                           width: 100%;
+                           top: 150px;
+                           left: 50px;
+                           width: 93%;
                            padding: 5px 0px 5px 0px;
                            text-align: center;
                            font-weight: bold;
@@ -57,15 +56,15 @@ output$dashboard = renderUI({
           uiOutput("chartUI") %>% withSpinner()
         )
       ),
+      conditionalPanel(condition = "$('html').hasClass('shiny-busy')",
+                       tags$div("Loading Page!!! Please wait...",id = "loadmessage")),
       argonRow(
         argonColumn(
           width = 12,
           dataTableOutput("dataTableCountryWise") %>% withSpinner()
           
         )
-      ),
-      conditionalPanel(condition = "$('html').hasClass('shiny-busy')",
-                       tags$div("Loading Page! Please wait...",id = "loadmessage"))
+      )
     ),
   argonTab(
     tabName = "Comparision",
@@ -662,6 +661,7 @@ output$dataTableCountryWise = renderDataTable({
         mutate(totalRecoveredPer = Recovered/Confirmed) %>%
         mutate(totalDeathPer = Deaths/Confirmed) %>%
     select(Country = countryName, Confirmed = Confirmed, Active = Unrecovered,Recovered = Recovered,Deaths = Deaths,"Active (%)" = totalActivePer,"Recovered (%)" = totalRecoveredPer,"Deaths (%)" = totalDeathPer)
+  results$resultTable = x
   datatable(x,
             extensions = 'Buttons',
             rownames = FALSE,
@@ -1314,6 +1314,8 @@ output$forecastUI = renderUI({
       )
     ),
     tags$hr(),
+    uiOutput("forecastBadge") %>% withSpinner(),
+    tags$br(),
     argonRow(
       argonColumn(
         width = 5,
@@ -1334,9 +1336,17 @@ observeEvent(input$countryForecastInput,{
             .[,2] %>%
             gsub(",", "",.) %>%
             as.numeric()
+  valueDeath = results$resultTable %>%
+                  filter(Country == input$countryForecastInput) %>%
+                  .["Deaths (%)"] %>%
+                  as.numeric() * 100 %>%
+                  round(.,2)
   updateNumericInput(session,
                      inputId = "populationInput",
                      value = value)
+  updateNumericInput(session,
+                     inputId = "fatalityInput",
+                     value = valueDeath)
 })
 
 output$currentScenario = renderHighchart({
@@ -1346,7 +1356,7 @@ output$currentScenario = renderHighchart({
             filter(Confirmed > 0) %>%
             select(date,Confirmed,Recovered)
   day = 1:(nrow(data))
-  lmModel <- augment( lm(log10(data$Confirmed) ~ day, data = data))
+  lmModel <- augment(lm(log10(data$Confirmed) ~ day, data = data))
   hc <- highchart() %>% 
            hc_subtitle(text = paste0("Cumulative Infected Cases in ",input$countryForecastInput),
                        align = "left",
@@ -1368,10 +1378,11 @@ output$currentScenario = renderHighchart({
 
 output$forecastedScenario = renderHighchart({
   req(!is.null(coronavirus))
+  req(!is.na(input$populationInput))
   active_color <- "#1f77b4"
   recovered_color <- "forestgreen"
   death_color <- "red"
-  orange_color <- "orange"
+  orange_color <- "#172b4d"
   data = coronavirus %>% 
           filter(countryName == input$countryForecastInput) %>%
           filter(Confirmed > 0) %>%
@@ -1379,6 +1390,7 @@ output$forecastedScenario = renderHighchart({
   I = data$Confirmed[1]
   R = data$Recovered[1]
   N = input$populationInput
+  Day = 1:length(data$Confirmed)
   SIR <- function(time, state, parameters) {
     par <- as.list(c(state, parameters))
     with(par, {
@@ -1393,15 +1405,15 @@ output$forecastedScenario = renderHighchart({
     names(parameters) <- c("beta", "gamma")
     out <- ode(y = init, times = Day, func = SIR, parms = parameters)
     fit <- out[ , 3]
-    sum((Infected - fit)^2)
+    sum((data$Confirmed - fit)^2)
   }
   model = optim(c(0.5, 0.5), RSS, method = "L-BFGS-B", lower = c(0, 0), upper = c(1, 1),hessian = F)
   modelPar <- setNames(model$par, c("beta", "gamma"))
   t = 1:(input$dateForecast - as.Date(min(data$date)))
   fitValue <- data.frame(ode(y = init, times = t, func = SIR, parms = modelPar))
-  results$modelFit = fitValue
   fitValue = fitValue %>%
                 mutate(date = as.Date(min(data$date)) + time)
+  results$modelFit = list(params = modelPar,fitValue = fitValue)
   hc <- highchart() %>% 
     hc_subtitle(text = paste0("Predicted Infected Cases in ",input$countryForecastInput," by ",input$dateForecast),
                 align = "left",
@@ -1422,9 +1434,57 @@ output$forecastedScenario = renderHighchart({
       enabled = TRUE
     ) %>%
     hc_colors(c(active_color,death_color,recovered_color,orange_color)) %>%
-    hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
-               shared = TRUE, borderWidth = 5,table = T)
+    hc_tooltip(crosshairs = T, backgroundColor = "#FCFFC5",
+               shared = T, borderWidth = 5,table = T)
   
+})
+
+output$forecastBadge = renderUI({
+  req(!is.null(results$modelFit))
+  req(!is.null(input$fatalityInput))
+  req(!is.null(input$severeInput))
+  r0 = results$modelFit$params[1] / results$modelFit$params[2]
+  pandemicHeight = max(results$modelFit$fitValue$I)
+  deathForecast = pandemicHeight * (input$fatalityInput/100)
+  severeForecast = pandemicHeight * (input$severeInput/100)
+  argonRow(
+    argonColumn(
+      width = 3,
+      argonBadge(
+        text = paste0("Reproductive rate = ",round(r0,2)),
+        pill = T,
+        status = ifelse(as.numeric(r0) < 1,"success",
+                        ifelse(as.numeric(r0) < 1.5,"warning",
+                               "danger")
+                        ),
+        src = "https://nivedi.res.in/Nadres_v2/ro_material.php"
+      )
+    ),
+    argonColumn(
+      width = 3,
+      argonBadge(
+        text = paste0("Pandemic height = ",prettyNum(round(pandemicHeight,0),big.mark = ",")),
+        pill = T,
+        status = "primary"
+      )
+    ),
+    argonColumn(
+      width = 3,
+      argonBadge(
+        text = paste0("Severe cases = ",prettyNum(round(severeForecast,0),big.mark = ",")),
+        pill = T,
+        status = "warning"
+      )
+    ),
+    argonColumn(
+      width = 3,
+      argonBadge(
+        text = paste0("Deaths till height= ",prettyNum(round(deathForecast,0),big.mark = ",")),
+        pill = T,
+        status = "danger"
+      )
+    )
+  )
 })
 #### Sentiment analysis ----
 
