@@ -1500,7 +1500,7 @@ output$sentimentUI = renderUI({
       argonColumn(
         width = 12,
         center = T,
-        h1("Sentiment analysis using Twitter Data")
+        h2("Sentiment analysis using social media data")
       )
     ),
     argonRow(
@@ -1513,7 +1513,7 @@ output$sentimentUI = renderUI({
               center = T,
               actionBttn(
                 inputId = "runSentiment",
-                label = "Run Sentiment Analysis",
+                label = "Click to Run Sentiment Analysis",
                 color = "warning",
                 block = T
               )
@@ -1531,7 +1531,7 @@ output$sentimentUI = renderUI({
               inline = F
             ),
             radioGroupButtons(inputId = "tweetsOption", 
-                              label = strong("Specify the number of latest tweets use for analysis (time take to run the analysis):"), 
+                              label = strong("Specify the number of latest posts use for analysis (time take to run the analysis):"), 
                               choices = setNames(c(1:5),c("500 (<1 Minutes)","1000 (1 Minutes)","2000 (2 Minutes)","5000 (3 Minutes)","10000 (5 Minutes)")),
                               selected = "1",
                               justified = T,
@@ -1582,7 +1582,7 @@ observeEvent(input$runSentiment,{
                        size = NULL, 
                        status = "success", 
                        striped = T,
-                       title = paste0("Fetching data from twitter...","(Take approx ",time," to run"))
+                       title = paste0("Fetching data...","(Take approx ",time," to run)"))
     consumer_key <- 'lJPpmqW41pv6K6miqXmcXYemV'
     consumer_secret <- '01kHQaZqGhmboh7bAUBJIy1rqdqb7QLjan0RQgyNIyWwLOm2u1'
     access_token <- '1966387032-BDCHsUK08TbtmxOcFuFnKii1Jt94l72tn1Oz5lZ'
@@ -1595,7 +1595,7 @@ observeEvent(input$runSentiment,{
       session = session,
       id = "twitterProgress",
       value = 50,
-      title = "Pre-processing data..."
+      title = "Processing data..."
     )
     tweetsDF <- twListToDF(tweets)
     tweetsText <- tweetsDF$text
@@ -1654,7 +1654,7 @@ output$sentimentPlot = renderHighchart({
   tweetsScores = sentimentAnalResult$tweetScores
   proper = function(x) paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
   hc <- highchart() %>% 
-    hc_subtitle(text = "Sentiments of people behind the tweets on pandemic CORONAVIRUS",
+    hc_subtitle(text = "Sentiments of people behind the posts on pandemic CORONAVIRUS",
                 align = "left",
                 style = list(color = "#2b908f", fontWeight = "bold")) %>%
     hc_xAxis(categories = proper(tweetsScores$sentiment),title = list(text = "Sentiments")) %>%

@@ -18,6 +18,10 @@ CSS =
       width: 100%;
       color: grey;
       }
+      .main-content .container-fluid {
+          padding-right: 10px!important;
+          padding-left: 10px!important;
+      }
       .navbar-nav .nav-link {
       color: white!important;
       }
