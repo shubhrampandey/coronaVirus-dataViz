@@ -134,7 +134,8 @@ ui <- tagList( # dependencies
       tags$hr(),
       h5("Important Note:",style = 'color:Red;font-size:20px;text-align:Left;'),
       p("1. The data used in this dashboard extracted from webscrapping. In case of any discrepnecy in the numbers please contact with me.",style = 'color:Red;font-size:15px;text-align:Left;'),
-      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;')
+      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. It could be a chance that daily numbers not match as per your local source but aggregare numbers will definitely match."),style = 'color:Red;font-size:15px;text-align:Left;'),
+      p(paste0("3. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;')
     )
   )
   )
