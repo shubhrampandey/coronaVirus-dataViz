@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v2.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-04-03"
+lastUpdate = "2020-04-06"
 
 loader <- tagList(
   waiter::spin_loaders(42),
@@ -48,74 +48,32 @@ ui <- tagList( # dependencies
       background_img = "coronavirus.jpg",
       height = 70,
       argonRow(
-        argonColumn(width = 9,
+        argonColumn(width = 8,
                     h4(appLongName, style = 'color:white;
                        text-align:left;
                        vertical-align: middle;
-                       font-size:35px;')
+                       font-size:40px;')
                     ),
         argonColumn(
-          width = 3,
-          argonRow(
-            center = T,
-            argonColumn(
-              width = 12,
-              center = T,
-              h5(HTML("Creator and maintainer: <a href='https://www.shubhrampandey.com'>Shubhram Pandey</a>"), style = 'color:white;text-align:right;font-size:15px;')
-            ),
-            argonColumn(
-              width = 12,
-              argonNavMenu(
-                side = "right",
-                argonRow(
-                  center = T,
-                  argonColumn(
-                    width = 1,
-                    argonNavItem(
-                      name = "facebook",
-                      src = "https://www.facebook.com/Shubhram1992",
-                      icon = icon("facebook-square"),
-                      tooltip = "Like us on Facebook"
-                    )
-                  ),
-                  argonColumn(
-                    width = 1,
-                    offset = 1,
-                    argonNavItem(
-                      name = "linkedin",
-                      src = "https://www.linkedin.com/in/shubhrampandey/",
-                      icon = icon("linkedin"),
-                      tooltip = "Follow us on Linkedin"
-                    )
-                  ),
-                  argonColumn(
-                    width = 1,
-                    offset = 1,
-                    argonNavItem(
-                      name = "github",
-                      src = "https://github.com/shubhrampandey",
-                      icon = icon("github"),
-                      tooltip = "Star us on Github"
-                    )
-                  )
-                )
-              )
-              
-            )
-          )
+          width = 4,
+          h6(HTML(paste0("Creator & Maintainer: <a href='https://www.shubhrampandey.com' target = '_blank'>Shubhram Pandey</a>")), style = 'color:white;
+                                  text-align: right;
+                                  font-size:15px;
+                                  margin-bottom: 0em'),
+          h6(HTML(paste0("<a href='https://www.3ai.in' target = '_blank'> - 3AI Ambassdor</a>")), style = 'color:white;text-align: right;font-size:15px;')
         ),
         fixedPanel(
           div(
             actionBttn("fullScreen",
                        style = "material-circle",
                        icon = icon("arrows-alt"),
-                       size = "s",
+                       size = "xs",
                        color = "warning"),
             bsPopover("fullScreen", title = NULL, content = "Click to view in full screen", placement = "left", trigger = "hover",
                       options = NULL),
             onclick = "shinyjs.toggleFullScreen();"
           ),
-          top = 50,
+          top = 55,
           right = 10
           
         ),
@@ -124,14 +82,14 @@ ui <- tagList( # dependencies
             actionBttn("kofi",
                        style = "material-circle",
                        icon = icon("coffee"),
-                       size = "s",
+                       size = "xs",
                        color = "success"),
             bsPopover("kofi", title = NULL, content = "Buy me a coffee", placement = "left", trigger = "hover",
                       options = NULL),
             onclick = "window.open('https://ko-fi.com/shubhrampandey', '_blank')"
           ),
-          top = 50,
-          right = 50
+          top = 55,
+          right = 40
           
         ),
         fixedPanel(
@@ -139,14 +97,29 @@ ui <- tagList( # dependencies
             actionBttn("userGuide",
                        style = "material-circle",
                        icon = icon("info"),
-                       size = "s",
+                       size = "xs",
                        color = "royal"),
             bsPopover("userGuide", title = NULL, content = "Go to app help page", placement = "left", trigger = "hover",
                       options = NULL),
             onclick = "window.open('https://sites.google.com/view/covid-19-userguide/home', '_blank')"
           ),
-          top = 50,
-          right = 90
+          top = 55,
+          right = 70
+          
+        ),
+        fixedPanel(
+          div(
+            actionBttn("webSite",
+                       style = "material-circle",
+                       icon = icon("address-card"),
+                       size = "xs",
+                       color = "primary"),
+            bsPopover("webSite", title = NULL, content = "About developer", placement = "left", trigger = "hover",
+                      options = NULL),
+            onclick = "window.open('https://www.shubhrampandey.com', '_blank')"
+          ),
+          top = 55,
+          right = 100
           
         )
                     )
@@ -161,7 +134,8 @@ ui <- tagList( # dependencies
       tags$hr(),
       h5("Important Note:",style = 'color:Red;font-size:20px;text-align:Left;'),
       p("1. The data used in this dashboard extracted from webscrapping. In case of any discrepnecy in the numbers please contact with me.",style = 'color:Red;font-size:15px;text-align:Left;'),
-      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;')
+      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. It could be a chance that daily numbers not match as per your local source but aggregare numbers will definitely match."),style = 'color:Red;font-size:15px;text-align:Left;'),
+      p(paste0("3. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;')
     )
   )
   )

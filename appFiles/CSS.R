@@ -18,6 +18,10 @@ CSS =
       width: 100%;
       color: grey;
       }
+      .main-content .container-fluid {
+          padding-right: 10px!important;
+          padding-left: 10px!important;
+      }
       .navbar-nav .nav-link {
       color: white!important;
       }
@@ -191,8 +195,8 @@ CSS =
       background: linear-gradient(87deg,#f8f9fe 0,#11c6ef 100%)!important;
       }
       p {
-      text-align: justify;
-      font-size:14px;
+      margin-top: 0rem;
+      margin-bottom: 0rem;
       }
       p1 {
       text-align: justify;
