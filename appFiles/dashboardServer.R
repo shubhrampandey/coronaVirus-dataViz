@@ -19,15 +19,50 @@ output$dashboard = renderUI({
     size = "sm",
     width = 12,
     iconList = list(
+      icon("home"),
       icon("tachometer-alt"), 
       icon("laptop-code"), 
       icon("chart-line"),
       icon("twitter")
     ),
+    argonTab(
+      tabName = "Home",
+      active = T,
+      argonRow(
+        argonColumn(
+          width = 4,
+          img(src = 'covid.jpg',width = "100%"),
+          h6("Source: Wikipedia",style = 'text-align:center;
+             font-style: italic;font-weight: bold;
+             ')
+          ),
+        argonColumn(
+          width = 5,
+          p("A new invisible enemy, only 30kb in size, has emerged and is on a killing spree around the world: 2019-nCoV, the Novel Coronavirus!",style = 'text-align:justify;'),
+          p("In right we can see some precautionary measures to prevent spread of Coronavirus.",style = 'text-align:justify;'),
+          tags$br(),
+          p("This monitor was developed to make the data and key visualisations of COVID-19 trends available to everyone and also provide a platform to conduct a sentiment anlysis of social media posts using Natural Language Processing(NLP).",style = 'text-align:justify;')
+        ),
+        argonColumn(
+          width = 3,
+          img(src = 'covidGif.gif',width = "100%",height = "80%"),
+          h6("Source: Giphy",style = 'text-align:center;font-style: italic;font-weight: bold;')
+        )
+        
+          ),
+      p("This monitor has 3 tabs: Dashboard, Comparision and Sentiments.Dashboard allows user to view a complete picture of COVID-19 spread aorund the world. User can also click on any country in the map to view the numbers in that country. In COmparision tab user can compare the spread of COVID-19 in multiple countries in one view. Sentiment tab allows user to run a sentiment analysis of trending hashtags of coronavirus on social media",style = 'text-align:justify;'),
+      tags$br(),
+      h4("Important Note:",style = 'color:Red;font-size:15px;text-align:Left;'),
+      p("1. The data used in this dashboard taken from WHO website. In case of any discrepnecy in the numbers please contact with developer",style = 'color:Red;font-size:13px;text-align:Left;'),
+      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. It could be a chance that daily numbers not match as per your local source but aggregate numbers will definitely match."),style = 'color:Red;font-size:13px;text-align:Left;'),
+      p(paste0("3. Last update: ",lastUpdate),style = 'color:Red;font-size:13px;text-align:Left;')
+      
+      
+    ),
     # analysis setting tab -----
     argonTab(
       tabName = "Dashboard",
-      active = T,
+      active = F,
       tags$head(tags$style(type = "text/css", "
              #loadmessage {
                            position: fixed;
@@ -126,60 +161,20 @@ output$dashboard = renderUI({
   # )
   )
 })
-
-observe({
-  waiter_show(loader)
-  results$dataframeFinal = coronavirus
-  dataframeTotal <- coronavirus %>% 
-                      dplyr::group_by(countryName) %>%
-                      slice(n()) %>%
-                      ungroup() %>%
-                      dplyr::mutate(Unrecovered = Confirmed - ifelse(is.na(Recovered), 0, Recovered) - ifelse(is.na(Deaths), 0, Deaths)) %>%
-                      dplyr::arrange(-Confirmed) %>%
-                      dplyr::ungroup() %>%
-                      select(-c(date,region,lat,lon))
-  # browser()
-  results$dataframeTotal = dataframeTotal
-  df_daily <- coronavirus %>% 
-                dplyr::group_by(date) %>%
-                dplyr::summarise(totalConfirmed = sum(Confirmed, na.rm = TRUE),
-                                 totalRecovered = sum(Recovered,na.rm = TRUE),
-                                 totalDeaths = sum(Deaths,na.rm = T)
-                                 ) %>%
-                dplyr::arrange(date) %>%
-                dplyr::ungroup() %>%
-                dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) 
-  results$dfDaily = df_daily
-  
-  max_date <- as.Date(max(coronavirus$date)) 
-  newCases = coronavirus %>% 
-              dplyr::filter(date == max_date | date == max_date - 1) %>%
-              dplyr::group_by(countryName) %>%
-              mutate(ConfirmedNew = Confirmed - shift(Confirmed,1)) %>% 
-              mutate(RecoveredNew = Recovered - shift(Recovered,1)) %>%
-              mutate(DeathsNew = Deaths - shift(Deaths,1)) %>%
-              slice(n()) %>%
-              ungroup() %>%
-              select(countryName,ConfirmedNew,RecoveredNew,DeathsNew)
-  
-  results$newCases = newCases
-  dataframeTotalOldCases = coronavirus %>%
-                            dplyr::filter(date == max_date - 1) %>%
-                            dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths) %>%
-    summarise(totalConfirmed = sum(Confirmed,na.rm = T),
-              totalDeath = sum(Deaths,na.rm = T),
-              totalRecovered = sum(Recovered,na.rm = T),
-              totalUnrecovered = sum(Unrecovered,na.rm = T)
-    )
-  results$dataframeTotalOldCases = dataframeTotalOldCases
-  dataframeOldCases = coronavirus %>%
-                            dplyr::filter(date == max_date - 1) %>%
-                            dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths)
-  results$dataframeOldCases = dataframeOldCases
-  waiter_hide()
-})
+outputOptions(output, "dashboard", suspendWhenHidden = FALSE)
 
 output$confirmedCount <- renderCountup({
+  results$dataframeFinal = coronavirus
+  dataframeTotal <- coronavirus %>% 
+    dplyr::group_by(countryName) %>%
+    slice(n()) %>%
+    ungroup() %>%
+    dplyr::mutate(Unrecovered = Confirmed - ifelse(is.na(Recovered), 0, Recovered) - ifelse(is.na(Deaths), 0, Deaths)) %>%
+    dplyr::arrange(-Confirmed) %>%
+    dplyr::ungroup() %>%
+    select(-c(date,region,lat,lon))
+  # browser()
+  results$dataframeTotal = dataframeTotal
   totalConfirmed = sum(results$dataframeTotal$Confirmed,na.rm = T)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -276,6 +271,42 @@ output$countryCount <- renderCountup({
 })
 
 output$cardUI = renderUI({
+  df_daily <- coronavirus %>% 
+    dplyr::group_by(date) %>%
+    dplyr::summarise(totalConfirmed = sum(Confirmed, na.rm = TRUE),
+                     totalRecovered = sum(Recovered,na.rm = TRUE),
+                     totalDeaths = sum(Deaths,na.rm = T)
+    ) %>%
+    dplyr::arrange(date) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) 
+  results$dfDaily = df_daily
+  
+  max_date <- as.Date(max(coronavirus$date)) 
+  newCases = coronavirus %>% 
+    dplyr::filter(date == max_date | date == max_date - 1) %>%
+    dplyr::group_by(countryName) %>%
+    mutate(ConfirmedNew = Confirmed - shift(Confirmed,1)) %>% 
+    mutate(RecoveredNew = Recovered - shift(Recovered,1)) %>%
+    mutate(DeathsNew = Deaths - shift(Deaths,1)) %>%
+    slice(n()) %>%
+    ungroup() %>%
+    select(countryName,ConfirmedNew,RecoveredNew,DeathsNew)
+  
+  results$newCases = newCases
+  dataframeTotalOldCases = coronavirus %>%
+    dplyr::filter(date == max_date - 1) %>%
+    dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths) %>%
+    summarise(totalConfirmed = sum(Confirmed,na.rm = T),
+              totalDeath = sum(Deaths,na.rm = T),
+              totalRecovered = sum(Recovered,na.rm = T),
+              totalUnrecovered = sum(Unrecovered,na.rm = T)
+    )
+  results$dataframeTotalOldCases = dataframeTotalOldCases
+  dataframeOldCases = coronavirus %>%
+    dplyr::filter(date == max_date - 1) %>%
+    dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths)
+  results$dataframeOldCases = dataframeOldCases
   tagList(
     argonRow(
       argonColumn(
@@ -654,6 +685,7 @@ output$newCasesRecoveredPlot = renderHighchart({
 })
 
 output$dataTableCountryWise = renderDataTable({
+  req(!is.null(results$dataframeTotal))
   x = results$dataframeTotal %>%
         select(-countryCode) %>%
         arrange(desc(Confirmed)) %>%

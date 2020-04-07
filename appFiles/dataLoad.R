@@ -28,15 +28,3 @@ hideAllBut = function(divList, butNdx) {
   shinyjs::show(divList[butNdx])
 }
 
-#### Population load from wordometer ----
-
-# library(XML)
-# library(RCurl)
-# library(rlist)
-# theurl <- getURL("https://www.worldometers.info/world-population/population-by-country/" )
-# tables <- readHTMLTable(theurl)
-# tables <- list.clean(tables, fun = is.null, recursive = FALSE)
-# data = tables$example2 %>%
-#   select('Country (or dependency)',"Population (2020)") %>%
-#   as.data.frame() %>%
-#   write.csv(.,"data/population.csv")

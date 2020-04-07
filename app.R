@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v2.0"
 appName = "COVID-19 Data Visualization Platform"
 appLongName = "COVID-19 Data Visualization Platform"
-lastUpdate = "2020-04-06"
+lastUpdate = "2020-04-07"
 
 loader <- tagList(
   waiter::spin_loaders(42),
@@ -130,12 +130,7 @@ ui <- tagList( # dependencies
     body = argonDashBody(
       tags$head( tags$meta(name = "viewport", content = "width=1600"),uiOutput("body")),
       tags$br(),
-           dashboardUI,
-      tags$hr(),
-      h5("Important Note:",style = 'color:Red;font-size:20px;text-align:Left;'),
-      p("1. The data used in this dashboard extracted from webscrapping. In case of any discrepnecy in the numbers please contact with me.",style = 'color:Red;font-size:15px;text-align:Left;'),
-      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. It could be a chance that daily numbers not match as per your local source but aggregare numbers will definitely match."),style = 'color:Red;font-size:15px;text-align:Left;'),
-      p(paste0("3. Last update: ",lastUpdate),style = 'color:Red;font-size:15px;text-align:Left;')
+           dashboardUI
     )
   )
   )
