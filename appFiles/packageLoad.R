@@ -24,8 +24,6 @@ if (!require(topicmodels)) {install.packages("topicmodels"); library(topicmodels
 if (!require(ROAuth)) {install.packages("ROAuth"); library(ROAuth)}
 if (!require(wordcloud)) {install.packages("wordcloud"); library(wordcloud)}
 if (!require(shinyBS)) {install.packages("shinyBS"); library(shinyBS)}
-if (!require(deSolve)) {install.packages("deSolve"); library(deSolve)}
-if (!require(broom)) {install.packages("broom"); library(broom)} #### for linear model
 
 
 

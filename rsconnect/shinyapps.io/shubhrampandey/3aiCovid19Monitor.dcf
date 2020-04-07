@@ -1,0 +1,13 @@
+name: 3aiCovid19Monitor
+title: 3aiCovid19Monitor
+username:
+account: shubhrampandey
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2070868
+bundleId: 2979071
+url: https://shubhrampandey.shinyapps.io/3aiCovid19Monitor/
+when: 1586234023.86707
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .gitattributes|.RData|README.md

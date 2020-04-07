@@ -336,6 +336,9 @@ CSS =
       text-align: left;
       }
       
+a {
+    color: #3213de;
+}
       .btn-outline-default {
       background-color: #f0f0f0;
       }
@@ -357,5 +360,27 @@ CSS =
                      '))
     )
 
-##### footer #####
+##### logo #####
 
+aiLogo= list(
+  img = function(height = "50px") {
+    img(src = "3aiLogo.jpg",
+        title = "3AI", height = height)
+  },
+  href = "https://www.3ai.in"
+)
+
+aiLogoL = 
+  tags$li(a(href = aiLogo$href,
+            target = "_blank",
+            id = "aiLink",
+            aiLogo$img(),
+            style = "padding-top:10px; padding-bottom:10px;"),
+          class = "dropdown")
+
+
+hideAllBut = function(divList, butNdx) {
+  library("shinyjs")
+  divList[-butNdx] %>% sapply(function(x) {shinyjs::hide(x)})
+  shinyjs::show(divList[butNdx])
+}

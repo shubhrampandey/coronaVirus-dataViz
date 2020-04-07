@@ -19,30 +19,49 @@ output$dashboard = renderUI({
     size = "sm",
     width = 12,
     iconList = list(
+      icon("home"),
       icon("tachometer-alt"), 
       icon("laptop-code"), 
-      icon("chart-line"),
       icon("twitter")
+    ),
+    argonTab(
+      tabName = "Home",
+      active = T,
+      argonRow(
+        argonColumn(
+          width = 4,
+          img(src = 'covid.jpg',width = "100%"),
+          h6("Source: Wikipedia",style = 'text-align:center;
+font-style: italic;font-weight: bold;
+')
+        ),
+        argonColumn(
+          width = 5,
+          p("A new invisible enemy, only 30kb in size, has emerged and is on a killing spree around the world: 2019-nCoV, the Novel Coronavirus!",style = 'text-align:justify;'),
+          p("In right we can see some precautionary measures to prevent spread of Coronavirus.",style = 'text-align:justify;'),
+          tags$br(),
+          p("This monitor was developed to make the data and key visualisations of COVID-19 trends available to everyone and also provide a platform to conduct a sentiment anlysis of social media posts using Natural Language Processing(NLP).",style = 'text-align:justify;')
+        ),
+        argonColumn(
+          width = 3,
+          img(src = 'covidGif.gif',width = "100%",height = "80%"),
+          h6("Source: Giphy",style = 'text-align:center;font-style: italic;font-weight: bold;')
+        )
+        
+      ),
+      p("This monitor has 3 tabs: Dashboard, Comparision and Sentiments.Dashboard allows user to view a complete picture of COVID-19 spread aorund the world. User can also click on any country in the map to view the numbers in that country. In COmparision tab user can compare the spread of COVID-19 in multiple countries in one view. Sentiment tab allows user to run a sentiment analysis of trending hashtags of coronavirus on social media",style = 'text-align:justify;'),
+      tags$br(),
+      h4("Important Note:",style = 'color:Red;font-size:15px;text-align:Left;'),
+      p("1. The data used in this dashboard taken from WHO website. In case of any discrepnecy in the numbers please contact with ",HTML("<a href='https://www.shubhrampandey.com' target = '_blank'>developer</a>."),style = 'color:Red;font-size:13px;text-align:Left;'),
+      p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. It could be a chance that daily numbers not match as per your local source but aggregate numbers will definitely match."),style = 'color:Red;font-size:13px;text-align:Left;'),
+      p(paste0("3. Last update: ",lastUpdate),style = 'color:Red;font-size:13px;text-align:Left;')
+
+      
     ),
     # analysis setting tab -----
     argonTab(
       tabName = "Dashboard",
-      active = T,
-      tags$head(tags$style(type = "text/css", "
-             #loadmessage {
-                           position: fixed;
-                           top: 150px;
-                           left: 50px;
-                           width: 93%;
-                           padding: 5px 0px 5px 0px;
-                           text-align: center;
-                           font-weight: bold;
-                           font-size: 100%;
-                           color: #000000;
-                           background-color: #CCFF66;
-                           z-index: 105;
-}
-  ")),
+      active = F,
       argonRow(
         argonColumn(
           width = 12,
@@ -56,8 +75,6 @@ output$dashboard = renderUI({
           uiOutput("chartUI") %>% withSpinner()
         )
       ),
-      conditionalPanel(condition = "$('html').hasClass('shiny-busy')",
-                       tags$div("Loading Page!!! Please wait...",id = "loadmessage")),
       argonRow(
         argonColumn(
           width = 12,
@@ -80,55 +97,16 @@ output$dashboard = renderUI({
     )
   ),
   argonTab(
-    tabName = "Forecasting",
-    active = F,
-    uiOutput("forecastUI") %>% withSpinner()
-  ),
-  argonTab(
     tabName = "Sentiments",
     active = F,
     uiOutput("sentimentUI") %>% withSpinner()
   )
-  # argonTab(
-  #   tabName = "Debug",
-  #   active = T,
-  #   icon =  icon("wrench"),
-  #   tagList(
-  #       argonRow(
-  #         argonColumn(
-  #           width =  12,
-  #           argonRow(
-  #             argonColumn(
-  #               width =  12,
-  #               textInput(
-  #                 "runRCode",
-  #                 paste0("Run R code",ifelse(Production," (disabled in production version)","")),
-  #                 width = "100%"
-  #               )
-  #             )
-  #           ),
-  #           argonRow(
-  #             argonColumn(
-  #               width =  12,
-  #               actionButton("runRCodeButton","Submit code")
-  #             )
-  #           )
-  #         )
-  #       ),
-  #       argonRow(
-  #         argonColumn(
-  #           width =  12,
-  #           br(),
-  #           verbatimTextOutput("runRCodeOutput")
-  #         )
-  #       )
-  #   )
-  # )
   )
 })
 
-observe({
-  waiter_show(loader)
+outputOptions(output, "dashboard", suspendWhenHidden = FALSE)
+
+output$confirmedCount <- renderCountup({
   results$dataframeFinal = coronavirus
   dataframeTotal <- coronavirus %>% 
                       dplyr::group_by(countryName) %>%
@@ -138,48 +116,7 @@ observe({
                       dplyr::arrange(-Confirmed) %>%
                       dplyr::ungroup() %>%
                       select(-c(date,region,lat,lon))
-  # browser()
   results$dataframeTotal = dataframeTotal
-  df_daily <- coronavirus %>% 
-                dplyr::group_by(date) %>%
-                dplyr::summarise(totalConfirmed = sum(Confirmed, na.rm = TRUE),
-                                 totalRecovered = sum(Recovered,na.rm = TRUE),
-                                 totalDeaths = sum(Deaths,na.rm = T)
-                                 ) %>%
-                dplyr::arrange(date) %>%
-                dplyr::ungroup() %>%
-                dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) 
-  results$dfDaily = df_daily
-  
-  max_date <- as.Date(max(coronavirus$date)) 
-  newCases = coronavirus %>% 
-              dplyr::filter(date == max_date | date == max_date - 1) %>%
-              dplyr::group_by(countryName) %>%
-              mutate(ConfirmedNew = Confirmed - shift(Confirmed,1)) %>% 
-              mutate(RecoveredNew = Recovered - shift(Recovered,1)) %>%
-              mutate(DeathsNew = Deaths - shift(Deaths,1)) %>%
-              slice(n()) %>%
-              ungroup() %>%
-              select(countryName,ConfirmedNew,RecoveredNew,DeathsNew)
-  
-  results$newCases = newCases
-  dataframeTotalOldCases = coronavirus %>%
-                            dplyr::filter(date == max_date - 1) %>%
-                            dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths) %>%
-    summarise(totalConfirmed = sum(Confirmed,na.rm = T),
-              totalDeath = sum(Deaths,na.rm = T),
-              totalRecovered = sum(Recovered,na.rm = T),
-              totalUnrecovered = sum(Unrecovered,na.rm = T)
-    )
-  results$dataframeTotalOldCases = dataframeTotalOldCases
-  dataframeOldCases = coronavirus %>%
-                            dplyr::filter(date == max_date - 1) %>%
-                            dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths)
-  results$dataframeOldCases = dataframeOldCases
-  waiter_hide()
-})
-
-output$confirmedCount <- renderCountup({
   totalConfirmed = sum(results$dataframeTotal$Confirmed,na.rm = T)
   opts <- list(useEasing = TRUE,
                useGrouping = TRUE,
@@ -276,6 +213,42 @@ output$countryCount <- renderCountup({
 })
 
 output$cardUI = renderUI({
+  df_daily <- coronavirus %>% 
+    dplyr::group_by(date) %>%
+    dplyr::summarise(totalConfirmed = sum(Confirmed, na.rm = TRUE),
+                     totalRecovered = sum(Recovered,na.rm = TRUE),
+                     totalDeaths = sum(Deaths,na.rm = T)
+    ) %>%
+    dplyr::arrange(date) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(totalUnrecovered = totalConfirmed - totalRecovered - totalDeaths) 
+  results$dfDaily = df_daily
+  
+  max_date <- as.Date(max(coronavirus$date)) 
+  newCases = coronavirus %>% 
+    dplyr::filter(date == max_date | date == max_date - 1) %>%
+    dplyr::group_by(countryName) %>%
+    mutate(ConfirmedNew = Confirmed - shift(Confirmed,1)) %>% 
+    mutate(RecoveredNew = Recovered - shift(Recovered,1)) %>%
+    mutate(DeathsNew = Deaths - shift(Deaths,1)) %>%
+    slice(n()) %>%
+    ungroup() %>%
+    select(countryName,ConfirmedNew,RecoveredNew,DeathsNew)
+  
+  results$newCases = newCases
+  dataframeTotalOldCases = coronavirus %>%
+    dplyr::filter(date == max_date - 1) %>%
+    dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths) %>%
+    summarise(totalConfirmed = sum(Confirmed,na.rm = T),
+              totalDeath = sum(Deaths,na.rm = T),
+              totalRecovered = sum(Recovered,na.rm = T),
+              totalUnrecovered = sum(Unrecovered,na.rm = T)
+    )
+  results$dataframeTotalOldCases = dataframeTotalOldCases
+  dataframeOldCases = coronavirus %>%
+    dplyr::filter(date == max_date - 1) %>%
+    dplyr::mutate(Unrecovered = Confirmed - Recovered - Deaths)
+  results$dataframeOldCases = dataframeOldCases
   tagList(
     argonRow(
       argonColumn(
@@ -654,6 +627,7 @@ output$newCasesRecoveredPlot = renderHighchart({
 })
 
 output$dataTableCountryWise = renderDataTable({
+  req(!is.null(results$dataframeTotal))
   x = results$dataframeTotal %>%
         select(-countryCode) %>%
         arrange(desc(Confirmed)) %>%
@@ -1253,239 +1227,7 @@ output$dataTableCountryCompare = renderDataTable({
     )
 })
 
-#### Forecast UI ----
 
-output$forecastUI = renderUI({
-  tagList(
-    h3("Prediction of nCov-19 cases using Infectious Disease Modelling"),
-    tags$br(),
-    argonRow(
-      argonColumn(
-        width = 3,
-        pickerInput(
-          inputId = "countryForecastInput",
-          label = strong("Select country:"),
-          choices = results$dataframeTotal$countryName,
-          selected = "India",
-          width = "100%",
-          options = list(`live-search` = TRUE),
-          inline = F
-        )
-      ),
-      argonColumn(
-        width = 2,
-        numericInput(
-          inputId = "populationInput",
-          label = strong("Population (N)"),
-          value = 1380004385,
-          min = 0,
-          width = "100%"
-        )
-      ),
-      argonColumn(
-        width = 2,
-        numericInput(
-          inputId = "fatalityInput",
-          label = strong("Fatality rate (in %)"),
-          value = 0.7,
-          min = 0,
-          width = "100%"
-        )
-      ),
-      argonColumn(
-        width = 3,
-        numericInput(
-          inputId = "severeInput",
-          label = strong("Severe cases (in %): Assumption"),
-          value = 5,
-          min = 0,
-          width = "100%"
-        )
-      ),
-      argonColumn(
-        width = 2,
-        dateInput( inputId = "dateForecast", 
-                        label = strong("Forecast till which date:"),
-                        value = Sys.Date() + 120,
-                        min = Sys.Date(),
-                        format = "dd-mm-yyyy",
-                        width = "100%"
-        )
-      )
-    ),
-    tags$hr(),
-    uiOutput("forecastBadge") %>% withSpinner(),
-    tags$br(),
-    argonRow(
-      argonColumn(
-        width = 5,
-        highchartOutput("currentScenario") %>% withSpinner()
-      ),
-      argonColumn(
-        width = 7,
-        highchartOutput("forecastedScenario") %>% withSpinner()
-      )
-      
-    )
-  )
-})
-
-observeEvent(input$countryForecastInput,{
-  value = population %>%
-            filter(Country == input$countryForecastInput) %>%
-            .[,2] %>%
-            gsub(",", "",.) %>%
-            as.numeric()
-  valueDeath = results$resultTable %>%
-                  filter(Country == input$countryForecastInput) %>%
-                  .["Deaths (%)"] %>%
-                  as.numeric() * 100 %>%
-                  round(.,2)
-  updateNumericInput(session,
-                     inputId = "populationInput",
-                     value = value)
-  updateNumericInput(session,
-                     inputId = "fatalityInput",
-                     value = valueDeath)
-})
-
-output$currentScenario = renderHighchart({
-  req(!is.null(coronavirus))
-  data = coronavirus %>% 
-            filter(countryName == input$countryForecastInput) %>%
-            filter(Confirmed > 0) %>%
-            select(date,Confirmed,Recovered)
-  day = 1:(nrow(data))
-  lmModel <- augment(lm(log10(data$Confirmed) ~ day, data = data))
-  hc <- highchart() %>% 
-           hc_subtitle(text = paste0("Cumulative Infected Cases in ",input$countryForecastInput),
-                       align = "left",
-                       style = list(color = "#2b908f", fontWeight = "bold")) %>%
-    hc_xAxis(categories = data$date) %>%
-    hc_yAxis(title = list(text = "Infected Cases (Log-scale)"),type = "logarithmic") %>%
-    hc_add_series(name = "Actual",data = data$Confirmed,type = "scatter") %>% 
-    hc_add_series(name = "Fitted",data = 10^lmModel$.fitted,type = "line")
-  
-  hc %>% 
-    hc_chart(borderColor = '#EBBA95',
-             borderRadius = 10,
-             borderWidth = 2
-    ) %>%
-    hc_tooltip(crosshairs = TRUE, backgroundColor = "#FCFFC5",
-               shared = TRUE, borderWidth = 5,table = T)
-  
-})
-
-output$forecastedScenario = renderHighchart({
-  req(!is.null(coronavirus))
-  req(!is.na(input$populationInput))
-  active_color <- "#1f77b4"
-  recovered_color <- "forestgreen"
-  death_color <- "red"
-  orange_color <- "#172b4d"
-  data = coronavirus %>% 
-          filter(countryName == input$countryForecastInput) %>%
-          filter(Confirmed > 0) %>%
-          select(date,Confirmed,Recovered)
-  I = data$Confirmed[1]
-  R = data$Recovered[1]
-  N = input$populationInput
-  Day = 1:length(data$Confirmed)
-  SIR <- function(time, state, parameters) {
-    par <- as.list(c(state, parameters))
-    with(par, {
-      dS <- -beta/N * I * S
-      dI <- beta/N * I * S - gamma * I
-      dR <- gamma * I
-      list(c(dS, dI, dR))
-    })
-  }
-  init <- c(S = N - I, I = I, R = R)
-  RSS <- function(parameters) {
-    names(parameters) <- c("beta", "gamma")
-    out <- ode(y = init, times = Day, func = SIR, parms = parameters)
-    fit <- out[ , 3]
-    sum((data$Confirmed - fit)^2)
-  }
-  model = optim(c(0.5, 0.5), RSS, method = "L-BFGS-B", lower = c(0, 0), upper = c(1, 1),hessian = F)
-  modelPar <- setNames(model$par, c("beta", "gamma"))
-  t = 1:(input$dateForecast - as.Date(min(data$date)))
-  fitValue <- data.frame(ode(y = init, times = t, func = SIR, parms = modelPar))
-  fitValue = fitValue %>%
-                mutate(date = as.Date(min(data$date)) + time)
-  results$modelFit = list(params = modelPar,fitValue = fitValue)
-  hc <- highchart() %>% 
-    hc_subtitle(text = paste0("Predicted Infected Cases in ",input$countryForecastInput," by ",input$dateForecast),
-                align = "left",
-                style = list(color = "#2b908f", fontWeight = "bold")) %>%
-    hc_xAxis(categories = fitValue$date) %>%
-    hc_yAxis(title = list(text = "Predicted Cases (Log-scale)"),type = "logarithmic") %>%
-    hc_add_series(name = "Susceptible",data = round(fitValue$S,0)) %>% 
-    hc_add_series(name = "Infected",data = round(fitValue$I,0)) %>%
-    hc_add_series(name = "Recovered",data = round(fitValue$R,0)) %>%
-    hc_add_series(name = "Actual infected",data = data$Confirmed)
-  
-  hc %>% 
-    hc_chart(borderColor = '#EBBA95',
-             borderRadius = 10,
-             borderWidth = 2
-    ) %>%
-    hc_exporting(
-      enabled = TRUE
-    ) %>%
-    hc_colors(c(active_color,death_color,recovered_color,orange_color)) %>%
-    hc_tooltip(crosshairs = T, backgroundColor = "#FCFFC5",
-               shared = T, borderWidth = 5,table = T)
-  
-})
-
-output$forecastBadge = renderUI({
-  req(!is.null(results$modelFit))
-  req(!is.null(input$fatalityInput))
-  req(!is.null(input$severeInput))
-  r0 = results$modelFit$params[1] / results$modelFit$params[2]
-  pandemicHeight = max(results$modelFit$fitValue$I)
-  deathForecast = pandemicHeight * (input$fatalityInput/100)
-  severeForecast = pandemicHeight * (input$severeInput/100)
-  argonRow(
-    argonColumn(
-      width = 3,
-      argonBadge(
-        text = paste0("Reproductive rate = ",round(r0,2)),
-        pill = T,
-        status = ifelse(as.numeric(r0) < 1,"success",
-                        ifelse(as.numeric(r0) < 1.5,"warning",
-                               "danger")
-                        ),
-        src = "https://nivedi.res.in/Nadres_v2/ro_material.php"
-      )
-    ),
-    argonColumn(
-      width = 3,
-      argonBadge(
-        text = paste0("Pandemic height = ",prettyNum(round(pandemicHeight,0),big.mark = ",")),
-        pill = T,
-        status = "primary"
-      )
-    ),
-    argonColumn(
-      width = 3,
-      argonBadge(
-        text = paste0("Severe cases = ",prettyNum(round(severeForecast,0),big.mark = ",")),
-        pill = T,
-        status = "warning"
-      )
-    ),
-    argonColumn(
-      width = 3,
-      argonBadge(
-        text = paste0("Deaths till height= ",prettyNum(round(deathForecast,0),big.mark = ",")),
-        pill = T,
-        status = "danger"
-      )
-    )
-  )
-})
 #### Sentiment analysis ----
 
 sentimentAnalResult = reactiveValues(
