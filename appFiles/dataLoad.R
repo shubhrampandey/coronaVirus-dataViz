@@ -8,13 +8,6 @@ coronavirus = coronavirus %>%
 
 names(coronavirus) = c("date","countryCode","region","lat","lon",
                        "Confirmed","Recovered","Deaths","countryName")
-#### Old data
-# 
-# df1 <- read.csv(file = "https://raw.githubusercontent.com/RamiKrispin/coronavirus-csv/master/coronavirus_dataset.csv", stringsAsFactors = F)
-# #
-# write.csv(df1,"data/coronavirus.csv")
-
-
 
 #### New data
 # 
@@ -28,3 +21,8 @@ hideAllBut = function(divList, butNdx) {
   shinyjs::show(divList[butNdx])
 }
 
+#### Old data
+# 
+# df1 <- read.csv(file = "https://raw.githubusercontent.com/RamiKrispin/coronavirus-csv/master/coronavirus_dataset.csv", stringsAsFactors = F)
+# #
+# write.csv(df1,"data/coronavirus.csv")

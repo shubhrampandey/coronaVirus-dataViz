@@ -41,7 +41,7 @@ output$dashboard = renderUI({
           p("A new invisible enemy, only 30kb in size, has emerged and is on a killing spree around the world: 2019-nCoV, the Novel Coronavirus!",style = 'text-align:justify;'),
           p("In right we can see some precautionary measures to prevent spread of Coronavirus.",style = 'text-align:justify;'),
           tags$br(),
-          p("This monitor was developed to make the data and key visualisations of COVID-19 trends available to everyone and also provide a platform to conduct a sentiment anlysis of social media posts using Natural Language Processing(NLP).",style = 'text-align:justify;')
+          p("This monitor was developed to make the data and key visualizations of COVID-19 trends available to everyone and also provide a platform to conduct a sentiment analysis of social media posts using Natural Language Processing (NLP).",style = 'text-align:justify;')
         ),
         argonColumn(
           width = 3,
@@ -50,10 +50,10 @@ output$dashboard = renderUI({
         )
         
           ),
-      p("This monitor has 3 tabs: Dashboard, Comparision and Sentiments.Dashboard allows user to view a complete picture of COVID-19 spread aorund the world. User can also click on any country in the map to view the numbers in that country. In COmparision tab user can compare the spread of COVID-19 in multiple countries in one view. Sentiment tab allows user to run a sentiment analysis of trending hashtags of coronavirus on social media",style = 'text-align:justify;'),
+      p("This monitor has 3 tabs: Dashboard, Comparison and Sentiments. Dashboard allows user to view a complete picture of COVID-19 spread around the world. User can also click on any country in the map to view the numbers in that country. In Comparison tab user can compare the spread of COVID-19 in multiple countries in one view. Sentiment tab allows user to run a sentiment analysis of trending hashtags of coronavirus on social media.",style = 'text-align:justify;'),
       tags$br(),
       h4("Important Note:",style = 'color:Red;font-size:15px;text-align:Left;'),
-      p("1. The data used in this dashboard taken from WHO website. In case of any discrepnecy in the numbers please contact with developer",style = 'color:Red;font-size:13px;text-align:Left;'),
+      p("1. The data used in this dashboard taken from WHO website. In case of any discrepancy in the numbers please contact with developer.",style = 'color:Red;font-size:13px;text-align:Left;'),
       p(paste0("2. Dashboard will be updated on daily basis at GMT 00:00. It could be a chance that daily numbers not match as per your local source but aggregate numbers will definitely match."),style = 'color:Red;font-size:13px;text-align:Left;'),
       p(paste0("3. Last update: ",lastUpdate),style = 'color:Red;font-size:13px;text-align:Left;')
       
@@ -554,7 +554,6 @@ output$cumulativePlot = renderHighchart({
     hc_add_series(name = "Death", data = df_daily$totalDeaths)
   
   hc %>% 
-    hc_chart(type = "column") %>%
     hc_chart(borderColor = '#EBBA95',
              borderRadius = 10,
              borderWidth = 2
