@@ -4,7 +4,7 @@ options(scipen = 1000, expressions = 10000)
 appVersion = "v2.0"
 appName = "3AI COVID-19 Data Monitor"
 appLongName = "3AI COVID-19 Data Monitor"
-lastUpdate = "2020-04-09"
+lastUpdate = "2020-04-11"
 
 loader <- tagList(
   waiter::spin_loaders(42),
