@@ -12,7 +12,7 @@ names(coronavirus) = c("date","countryCode","region","lat","lon",
 #### New data
 # 
 # df1 <- read.csv(file = "https://raw.githubusercontent.com/ulklc/covid19-timeseries/master/countryReport/raw/rawReport.csv", stringsAsFactors = F)
-# 
+
 # write.csv(df1,"data/coronavirus1.csv")
 
 hideAllBut = function(divList, butNdx) {
