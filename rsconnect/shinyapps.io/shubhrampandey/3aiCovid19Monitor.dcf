@@ -5,9 +5,9 @@ account: shubhrampandey
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2070868
-bundleId: 3048191
+bundleId: 3058064
 url: https://shubhrampandey.shinyapps.io/3aiCovid19Monitor/
-when: 1587534121.78468
+when: 1587704240.9747
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: .gitattributes|.RData|README.md
