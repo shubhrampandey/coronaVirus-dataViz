@@ -5,9 +5,9 @@ account: shubhrampandey
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1915300
-bundleId: 3301983
+bundleId: 3460277
 url: https://shubhrampandey.shinyapps.io/coronaVirusViz/
-when: 1592833518.37313
+when: 1596217211.80685
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: .gitattributes|README.md
