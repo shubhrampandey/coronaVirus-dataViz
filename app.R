@@ -32,7 +32,7 @@ ui <- tagList( # dependencies
   use_waiter(),
   useSweetAlert(),
   useShinyjs(),
-  extendShinyjs(text = jsToggleFS),
+  extendShinyjs(text = jsToggleFS,functions =  c("foo", "bar")),
   waiter::waiter_show_on_load(loader, color = "#000"),
 # shows before anything else
   ##### CSS and style functions #####
