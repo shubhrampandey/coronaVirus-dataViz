@@ -1,4 +1,4 @@
-coronavirus = read.csv("data/coronavirus1.csv", stringsAsFactors = F) [,-1]
+coronavirus = read.csv(file = "https://github.com/datasets/covid-19/raw/main/data/time-series-19-covid-combined.csv", stringsAsFactors = F)
 population = read.csv("data/population.csv",stringsAsFactors = F)[,-1]
 
 coronavirus = coronavirus %>% 
